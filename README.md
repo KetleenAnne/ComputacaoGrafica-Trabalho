@@ -1,2 +1,2 @@
-# ComputacaoGrafica-Trabalho
-Repositorio para o trabalhos  de computação grafica
+# CG
+Files for the Computer Graphics course in Three.js
