@@ -1,22 +1,38 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
+import { FlyControls } from '../build/jsm/controls/FlyControls.js';
 import {
     initRenderer,
-    initCamera,
+    SecondaryBox,
     initDefaultBasicLight,
     setDefaultMaterial,
     InfoBox,
     onWindowResize,
-    createGroundPlaneWired
-} from "../libs/util/util.js";
+    createGroundPlaneWired} from "../libs/util/util.js";
 
-let scene, renderer, camera, material, light, orbit; // Initial variables
-scene = new THREE.Scene();    // Create main scene
-renderer = initRenderer();    // Init a basic renderer
-camera = initCamera(new THREE.Vector3(0, 15, 30)); // Init camera in this position
+
+let material, light; // Initial variables
+var scene = new THREE.Scene();    // Create main scene
+const clock = new THREE.Clock();
+initDefaultBasicLight(scene, true); // Use default light
+var renderer = initRenderer();    // Init a basic renderer
+    renderer.setClearColor("cornflowerblue");
+//adicionando camera
+var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(10, 15, 10);
+  camera.up.set( 0, 1, 0 );
+
 material = setDefaultMaterial(); // create a basic material
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
-orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
+
+
+//controles de voo
+var flyCamera = new FlyControls( camera, renderer.domElement );
+  flyCamera.movementSpeed = 10;
+  flyCamera.domElement = renderer.domElement;
+  flyCamera.rollSpeed = 0.20;
+  flyCamera.autoForward = false;
+  flyCamera.dragToLook = false;
 
 // Listen window size changes
 window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
@@ -26,7 +42,7 @@ let axesHelper = new THREE.AxesHelper(12);
 scene.add(axesHelper);
 
 // create the ground plane
-let plane = createGroundPlaneWired(20, 20);//plano criado com base em (libs/util/util.js tem esse codigo)
+var plane = createGroundPlaneWired(400, 50, 200, 25, 2, "dimgray", "gainsboro");//plano criado com base em (libs/util/util.js tem esse codigo)
 scene.add(plane);//adiciona o plano a cena ja como grid
 
 // create a tree
@@ -69,18 +85,37 @@ scene.add(trunkMesh);//adiciona o tronco a cena
 trunkMesh.add(leavesMesh);//adiciona no tronco a 1 camada
 trunkMesh.add(leaves2Mesh);//adiciona a segunda camada ao tronco
 trunkMesh.add(leaves3Mesh);//adiciona a terceira camada ao tronco
-// Use this to show information onscreen
-let controls = new InfoBox();
-controls.add("Basic Scene");
-controls.addParagraph();
-controls.add("Use mouse to interact:");
-controls.add("* Left button to rotate");
-controls.add("* Right button to translate (pan)");
-controls.add("* Scroll to zoom in/out.");
-controls.show();
 
+var infoBox = new SecondaryBox("");
+
+showInformation();
 render();
+
+function showInformation()
+{  
+// Use this to show information onscreen
+    var controls = new InfoBox();
+    controls.add("Fly Controls");
+    controls.addParagraph();
+    controls.add("Keyboard:");            
+    controls.add("* WASD - Move");
+    controls.add("* R | F - up | down");
+    controls.add("* Q | E - roll");
+    controls.addParagraph();    
+    controls.add("Mouse and Keyboard arrows:");            
+    controls.add("* up | down    - pitch");        
+    controls.add("* left | right - yaw");
+    controls.addParagraph();    
+    controls.add("Mouse buttons:");            
+    controls.add("* Left  - Move forward");        
+    controls.add("* Right - Move backward");
+
+    controls.show();
+}
 function render() {
-    requestAnimationFrame(render);
-    renderer.render(scene, camera) // Render scene
+  const delta = clock.getDelta();
+  //stats.update();
+  flyCamera.update(delta);
+  requestAnimationFrame(render);
+  renderer.render(scene, camera) // Render scene
 }
