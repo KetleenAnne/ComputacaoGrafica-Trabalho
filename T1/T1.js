@@ -1,9 +1,7 @@
 import * as THREE from 'three';
-import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { FlyControls } from '../build/jsm/controls/FlyControls.js';
 import {
     initRenderer,
-    SecondaryBox,
     initDefaultBasicLight,
     setDefaultMaterial,
     InfoBox,
@@ -19,8 +17,9 @@ var renderer = initRenderer();    // Init a basic renderer
     renderer.setClearColor("cornflowerblue");
 //adicionando camera
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(10, 15, 10);
-  camera.up.set( 0, 1, 0 );
+  camera.position.set(-200, 20, 0);
+  camera.up.set( 0, 1, 0);
+  camera.lookAt(0, 0, 0);
 
 material = setDefaultMaterial(); // create a basic material
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
@@ -42,7 +41,7 @@ let axesHelper = new THREE.AxesHelper(12);
 scene.add(axesHelper);
 
 // create the ground plane
-var plane = createGroundPlaneWired(400, 50, 200, 25, 2, "dimgray", "gainsboro");//plano criado com base em (libs/util/util.js tem esse codigo)
+var plane = createGroundPlaneWired(400, 50, 200, 10, 2, "dimgray", "gainsboro");//plano criado com base em (libs/util/util.js tem esse codigo)
 scene.add(plane);//adiciona o plano a cena ja como grid
 
 // create a tree
@@ -85,8 +84,6 @@ scene.add(trunkMesh);//adiciona o tronco a cena
 trunkMesh.add(leavesMesh);//adiciona no tronco a 1 camada
 trunkMesh.add(leaves2Mesh);//adiciona a segunda camada ao tronco
 trunkMesh.add(leaves3Mesh);//adiciona a terceira camada ao tronco
-
-var infoBox = new SecondaryBox("");
 
 showInformation();
 render();
