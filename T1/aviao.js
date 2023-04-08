@@ -29,7 +29,7 @@ scene.add(axesHelper);
 
 //angulos
 var angle90 = THREE.MathUtils.degToRad(90); //cria o angulo 90º
-var speed = 0.08;
+var speed = 0.2;
 var animationOn = true; // control if animation is on or of
                                       
 
