@@ -6,22 +6,28 @@ import {
     setDefaultMaterial,
     InfoBox,
     onWindowResize,
-    createGroundPlaneWired} from "../libs/util/util.js";
+    createGroundPlaneWired
+} from "../libs/util/util.js";
+import { Arvore } from './Arvore.js';
 
 
-let material, light; // Initial variables
-var scene = new THREE.Scene();    // Create main scene
+let scene, renderer,material, materialTrunk, materialLeaves, light, orbit; // Initial variables
+const numArvores = 150;
 const clock = new THREE.Clock();
-initDefaultBasicLight(scene, true); // Use default light
-var renderer = initRenderer();    // Init a basic renderer
-    renderer.setClearColor("cornflowerblue");
-//adicionando camera
+scene = new THREE.Scene();    // Create main scene
+renderer = initRenderer();    // Init a basic renderer
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(-200, 20, 0);
-  camera.up.set( 0, 1, 0);
+  camera.position.set(-200.0, 20.0, 0.0);
+  camera.up.set( 0, 1, 0 );
   camera.lookAt(0, 0, 0);
+material = setDefaultMaterial();
+materialTrunk = new THREE.MeshPhongMaterial({
+    color: 0x8b4513, transparent: true
+}); // create a basic material
+materialLeaves = new THREE.MeshPhongMaterial({
+    color: 0x00ff00, transparent: true
+}); // create a basic material
 
-material = setDefaultMaterial(); // create a basic material
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
 
 
@@ -33,6 +39,17 @@ var flyCamera = new FlyControls( camera, renderer.domElement );
   flyCamera.autoForward = false;
   flyCamera.dragToLook = false;
 
+
+//create a fly camera
+var flyCamera = new FlyControls( camera, renderer.domElement );
+  flyCamera.movementSpeed = 10;
+  flyCamera.domElement = renderer.domElement;
+  flyCamera.rollSpeed = 0.20;
+  flyCamera.autoForward = false;
+  flyCamera.dragToLook = false;
+
+
+
 // Listen window size changes
 window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
 
@@ -41,57 +58,23 @@ let axesHelper = new THREE.AxesHelper(12);
 scene.add(axesHelper);
 
 // create the ground plane
-var plane = createGroundPlaneWired(400, 50, 200, 10, 2, "dimgray", "gainsboro");//plano criado com base em (libs/util/util.js tem esse codigo)
+let plane = createGroundPlaneWired(400, 50, 300, 50, 3, "dimgray", "gainsboro");//plano criado com base em (libs/util/util.js tem esse codigo)
 scene.add(plane);//adiciona o plano a cena ja como grid
 
+//create a group
+var group = new THREE.Group();
 // create a tree
-
-var trunk = new THREE.CylinderGeometry(0.6, 0.6, 3);//medidas do tronco
-var leaves = new THREE.ConeGeometry(1.5,1.5);//medida das camadas da arvore
-var leaves2 = new THREE.ConeGeometry(2,2);//medida das camadas da arvore
-var leaves3 = new THREE.ConeGeometry(2.5,2.5);//medida das camadas da arvore
-
-// create the mesh
-var trunkMesh = new THREE.Mesh(trunk, new THREE.MeshPhongMaterial({
-    color: 0x8b4513
-}));//mesh do tronco
-var leavesMesh = new THREE.Mesh(leaves, new THREE.MeshPhongMaterial({
-    color: 0x00ff00
-}));//mesh da 1 camada
-var leaves2Mesh = new THREE.Mesh(leaves2, new THREE.MeshPhongMaterial({
-    color: 0x00ff00
-}));//mesh da 2 camada
-var leaves3Mesh = new THREE.Mesh(leaves3, new THREE.MeshPhongMaterial({
-    color: 0x00ff00
-}));//mesh da 3 camada
-
-// position the trunk. Set y to half of height of trunk
-trunkMesh.position.set(-2, 1.5, 0);//posição do tronco
-leavesMesh.position.set(0, 4, 0);//posição em relação ao tronco da 1 camada
-leaves2Mesh.position.set(0, 3, 0);//posição em relação ao tronco da 2 camada
-leaves3Mesh.position.set(0, 2, 0);//posição em relação ao tronco da 3 camada
-
-trunkMesh.castShadow = true;//sombra do tronco
-trunkMesh.receiveShadow = true;
-leavesMesh.castShadow = true;//sombra da 1 camada
-leavesMesh.receiveShadow = true;
-leaves2Mesh.castShadow = true;//sombra da 2 camada
-leaves2Mesh.receiveShadow = true;
-leaves3Mesh.castShadow = true;//sombra da 3 camada
-leaves3Mesh.receiveShadow = true;
-
-scene.add(trunkMesh);//adiciona o tronco a cena
-trunkMesh.add(leavesMesh);//adiciona no tronco a 1 camada
-trunkMesh.add(leaves2Mesh);//adiciona a segunda camada ao tronco
-trunkMesh.add(leaves3Mesh);//adiciona a terceira camada ao tronco
+for (let i = 0; i < numArvores; i++) {
+    var arvore = new Arvore(group, materialLeaves, materialTrunk);
+    scene.add(group);
+}
 
 showInformation();
 render();
 
 function showInformation()
 {  
-// Use this to show information onscreen
-    var controls = new InfoBox();
+  var controls = new InfoBox();
     controls.add("Fly Controls");
     controls.addParagraph();
     controls.add("Keyboard:");            
