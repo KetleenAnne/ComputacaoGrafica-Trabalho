@@ -95,5 +95,6 @@ function render() {
     const delta = clock.getDelta();
     flyCamera.update(delta);
     requestAnimationFrame(render);
+    plano.update();
     renderer.render(scene, camera) // Render scene
 }
