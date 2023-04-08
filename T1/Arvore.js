@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class Arvore {
-    constructor(group,materialfolha, materialtronco) {
+    constructor(group, materialfolha, materialtronco) {
         // create a tree
         var trunk = new THREE.CylinderGeometry(0.6, 0.6, 3);//medidas do tronco
         var leaves = new THREE.ConeGeometry(1.5, 1.5);//medida das camadas da arvore
