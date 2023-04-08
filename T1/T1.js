@@ -9,6 +9,8 @@ import {
     onWindowResize,
     createGroundPlaneWired
 } from "../libs/util/util.js";
+import Plano from "./Plano.js";
+//import aviao from "./aviao.js";
 
 let scene, renderer, camera, material, light, orbit; // Initial variables
 scene = new THREE.Scene();    // Create main scene
@@ -17,6 +19,8 @@ camera = initCamera(new THREE.Vector3(0, 15, 30)); // Init camera in this positi
 material = setDefaultMaterial(); // create a basic material
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
 orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
+var plano = new Plano();
+//var Aviao = new aviao();
 
 // Listen window size changes
 window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
@@ -26,15 +30,15 @@ let axesHelper = new THREE.AxesHelper(12);
 scene.add(axesHelper);
 
 // create the ground plane
-let plane = createGroundPlaneWired(20, 20);//plano criado com base em (libs/util/util.js tem esse codigo)
-scene.add(plane);//adiciona o plano a cena ja como grid
+//let plane = createGroundPlaneWired(20, 20);//plano criado com base em (libs/util/util.js tem esse codigo)
+//scene.add(plane);//adiciona o plano a cena ja como grid
 
 // create a tree
 
 var trunk = new THREE.CylinderGeometry(0.6, 0.6, 3);//medidas do tronco
-var leaves = new THREE.ConeGeometry(1.5,1.5);//medida das camadas da arvore
-var leaves2 = new THREE.ConeGeometry(2,2);//medida das camadas da arvore
-var leaves3 = new THREE.ConeGeometry(2.5,2.5);//medida das camadas da arvore
+var leaves = new THREE.ConeGeometry(1.5, 1.5);//medida das camadas da arvore
+var leaves2 = new THREE.ConeGeometry(2, 2);//medida das camadas da arvore
+var leaves3 = new THREE.ConeGeometry(2.5, 2.5);//medida das camadas da arvore
 
 // create the mesh
 var trunkMesh = new THREE.Mesh(trunk, new THREE.MeshPhongMaterial({
@@ -69,6 +73,9 @@ scene.add(trunkMesh);//adiciona o tronco a cena
 trunkMesh.add(leavesMesh);//adiciona no tronco a 1 camada
 trunkMesh.add(leaves2Mesh);//adiciona a segunda camada ao tronco
 trunkMesh.add(leaves3Mesh);//adiciona a terceira camada ao tronco
+
+
+
 // Use this to show information onscreen
 let controls = new InfoBox();
 controls.add("Basic Scene");
@@ -82,5 +89,6 @@ controls.show();
 render();
 function render() {
     requestAnimationFrame(render);
+    plano.update();
     renderer.render(scene, camera) // Render scene
 }
