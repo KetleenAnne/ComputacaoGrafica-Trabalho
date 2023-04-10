@@ -18,7 +18,7 @@ class Arvore {
         var leaves3Mesh = new THREE.Mesh(leaves3, materialfolha);//mesh da 3 camada
 
         // position the trunk. Set y to half of height of trunk
-        trunkMesh.position.set(THREE.MathUtils.randFloat(-199, 199), 1.5, THREE.MathUtils.randFloat(-24, 24));//posição do tronco
+        trunkMesh.position.set(THREE.MathUtils.randFloat(-199, 599), 1.5, THREE.MathUtils.randFloat(-39, 39));//posição do tronco
         leavesMesh.position.set(0, 4, 0);//posição em relação ao tronco da 1 camada
         leaves2Mesh.position.set(0, 3, 0);//posição em relação ao tronco da 2 camada
         leaves3Mesh.position.set(0, 2, 0);//posição em relação ao tronco da 3 camada
