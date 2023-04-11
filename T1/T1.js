@@ -22,24 +22,10 @@ camera.position.set(-200.0, 20.0, 0.0);
 camera.up.set(0, 1, 0);
 camera.lookAt(0, 0, 0);
 material = setDefaultMaterial();
-materialTrunk = new THREE.MeshPhongMaterial({
-  color: 0x8b4513, transparent: true
-}); // create a basic material
-materialLeaves = new THREE.MeshPhongMaterial({
-  color: 0x00ff00, transparent: true
-}); // create a basic material
+materialTrunk = setDefaultMaterial('brown') // create a basic material
+materialLeaves = setDefaultMaterial('green')// create a basic material
 
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
-
-
-//controles de voo
-var flyCamera = new FlyControls(camera, renderer.domElement);
-flyCamera.movementSpeed = 80;
-flyCamera.domElement = renderer.domElement;
-flyCamera.rollSpeed = 0.50;
-flyCamera.autoForward = false;
-flyCamera.dragToLook = false;
-
 
 //create a fly camera
 var flyCamera = new FlyControls(camera, renderer.domElement);
