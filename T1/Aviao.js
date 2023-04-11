@@ -15,9 +15,6 @@ class Aviao{
   var janela = new THREE.CapsuleGeometry( 1, 1, 20, 25 ); //cria janela
   janela.rotateZ(- angle90); //rotacinando a janela em 90°
 
-  var detalhe = new THREE.RingGeometry( 0.5, 1.55, 32 ); //detalhe em amarelo da frente do aviao
-  detalhe.rotateY( angle90);
-
   var circulo = new THREE.CircleGeometry( 1, 32 ); //circulo preto da frente do avião
   circulo.rotateY( angle90); //rotacinando  em 90°
 
@@ -38,36 +35,32 @@ class Aviao{
   var asinha = new THREE.CapsuleGeometry(0.5 , 2, 30, 2); //asa que fica por cima
 
   //Mesh's
-  var baseMesh = new THREE.Mesh(base, new THREE.MeshPhongMaterial({color: 0x797D7F}));
+  var baseMesh = new THREE.Mesh(base, setDefaultMaterial('gray'));//({color: '0x797D7F'}));
   baseMesh.position.set(0, 5, 0);
 
-  var janelaMesh = new THREE.Mesh(janela, new THREE.MeshPhongMaterial({color: 0x1E90FF}));
+  var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial('blue'));
   janelaMesh.position.set(3, 1, 0);
 
-  var detalheMesh = new THREE.Mesh(detalhe, new THREE.MeshPhongMaterial({color: 0xF3B903, side: THREE.DoubleSide}));
-  detalheMesh.position.set(5.99, 0, 0);
-
-  var circuloMesh = new THREE.Mesh(circulo, new THREE.MeshPhongMaterial({color: 0x000000}));
+  var circuloMesh = new THREE.Mesh(circulo, setDefaultMaterial('black'));
   circuloMesh.position.set(6.01,0,0);
 
-  var cilindroMesh = new THREE.Mesh(cilindro, new THREE.MeshPhongMaterial({color: 0x000000}));
+  var cilindroMesh = new THREE.Mesh(cilindro, setDefaultMaterial('black'));
   cilindroMesh.position.set(6.01,0,0);
 
-  var heliceMesh = new THREE.Mesh(helice, new THREE.MeshPhongMaterial({color: 0xF3B903, side: THREE.DoubleSide})); 
+  var heliceMesh = new THREE.Mesh(helice, setDefaultMaterial('yellow', THREE.DoubleSide)); 
   heliceMesh.position.set(0.98, 0, 0);
 
-  var asaLateralMaiorMesh = new THREE.Mesh(asaLateralMaior, new THREE.MeshPhongMaterial({color: 0xF3B903, side: THREE.DoubleSide}));
+  var asaLateralMaiorMesh = new THREE.Mesh(asaLateralMaior, setDefaultMaterial('gray'));
   asaLateralMaiorMesh.position.set(2, 0, 0);
 
-  var asaLateralMenorMesh = new THREE.Mesh(asaLateralMenor, new THREE.MeshPhongMaterial({color: 0x797D7F, side: THREE.DoubleSide}));
+  var asaLateralMenorMesh = new THREE.Mesh(asaLateralMenor, setDefaultMaterial('gray'));
   asaLateralMenorMesh.position.set(-5, 0, 0);
 
-  var asinhaMesh = new THREE.Mesh(asinha, new THREE.MeshPhongMaterial({color: 0x797D7F, side: THREE.DoubleSide}));
+  var asinhaMesh = new THREE.Mesh(asinha, setDefaultMaterial('gray'));
   asinhaMesh.position.set(-5.5, 1, 0);
 
   scene.add(baseMesh);
   baseMesh.add(janelaMesh);
-  baseMesh.add(detalheMesh);
   baseMesh.add(circuloMesh);
   baseMesh.add(cilindroMesh);
   baseMesh.add(asaLateralMaiorMesh);
