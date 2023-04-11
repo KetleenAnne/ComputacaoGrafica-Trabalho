@@ -5,23 +5,23 @@ export class Plano {
   plano1;
   plano2;
   constructor(cena) {
-    this.plano1 = createGroundPlaneWired(500, 100, 300, 50, 3, "dimgray", "gainsboro");
-    this.plano2 = createGroundPlaneWired(500, 100, 300, 50, 3, "dimgray", "gainsboro");
-    this.plano2.position.set(500, 0, 0);
+    this.plano1 = createGroundPlaneWired(1000, 200, 300, 50, 3, "dimgray", "gainsboro");
+    this.plano2 = createGroundPlaneWired(1000, 200, 300, 50, 3, "dimgray", "gainsboro");
+    this.plano2.position.set(1000, 0, 0);
 
     cena.add(this.plano1);
     cena.add(this.plano2);
 
-    this.limiteCriadorDePlano = 250;
+    this.limiteCriadorDePlano = 500;
     this.alternadorDePlano = true;
     this.novaPosition = 0;
   }
 
   desenhaPlano(posicaoCameraX) {
-    let proxPlano = 1000;
+    let proxPlano = 2000;
 
     if (posicaoCameraX > this.limiteCriadorDePlano) {
-      this.limiteCriadorDePlano += 500;
+      this.limiteCriadorDePlano += 1000;
 
       if (this.alternadorDePlano) {
         this.novaPosition = this.plano1.position.x + proxPlano;
