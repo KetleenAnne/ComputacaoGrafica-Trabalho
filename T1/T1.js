@@ -14,7 +14,7 @@ import { degreesToRadians } from "../libs/util/util.js";
 //---VARIAVEIS E SETAGEM---
 
 let scene, renderer, material, materialTrunk, materialLeaves, light, orbit; // Initial variables
-const numArvores = 100;
+const numArvores = 120;
 const clock = new THREE.Clock();
 
 scene = new THREE.Scene();    // Create main scene
