@@ -1,24 +1,28 @@
-import * as THREE from 'three';
-import { FlyControls } from '../build/jsm/controls/FlyControls.js';
+import * as THREE from "three";
+import { FlyControls } from "../build/jsm/controls/FlyControls.js";
 import {
   initRenderer,
   initDefaultBasicLight,
   setDefaultMaterial,
   InfoBox,
   onWindowResize,
-  createGroundPlaneWired
+  createGroundPlaneWired,
 } from "../libs/util/util.js";
-import { Arvore } from './Arvore.js';
-import { Plano } from './Plano.js';
-import { Aviao } from './aviao.js';
+import { Arvore } from "./Arvore.js";
+import { Plano } from "./Plano.js";
+import { Aviao } from "./Aviao.js";
 
 let scene, renderer, aviao, materialTrunk, materialLeaves, light, orbit; // Initial variables
 const numArvores = 700;
 const clock = new THREE.Clock();
-scene = new THREE.Scene();    // Create main scene
-renderer = initRenderer();    // Init a basic renderer
-console.log(renderer);
-var camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+scene = new THREE.Scene(); // Create main scene
+renderer = initRenderer(); // Init a basic renderer
+var camera = new THREE.PerspectiveCamera(
+  65,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
 var plano = new Plano(scene);
 camera.position.set(-200.0, 20.0, 0.0);
 camera.up.set(0, 1, 0);
@@ -34,9 +38,14 @@ flyCamera.rollSpeed = 0.2;
 flyCamera.autoForward = true;
 flyCamera.dragToLook = false;
 
-
 // Listen window size changes
-window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
+window.addEventListener(
+  "resize",
+  function () {
+    onWindowResize(camera, renderer);
+  },
+  false
+);
 
 // Show axes (parameter is size of each axis)
 let axesHelper = new THREE.AxesHelper(12);
@@ -47,10 +56,10 @@ if (!aviao) {
 //--ARVORE--
 
 //materiais das ávores
-materialTrunk = setDefaultMaterial('brown');
+materialTrunk = setDefaultMaterial("brown");
 materialTrunk.transparent = true;
 //material folha
-materialLeaves = setDefaultMaterial('green');
+materialLeaves = setDefaultMaterial("green");
 materialLeaves.transparent = true;
 
 // create a tree
@@ -92,14 +101,13 @@ function showInformation() {
   controls.show();
 }
 
-
 function render() {
-
+  aviao.rotateCylinder();
   const delta = clock.getDelta();
   //stats.update();
   flyCamera.update(delta);
   requestAnimationFrame(render);
-  renderer.render(scene, camera) // Render scene
+  renderer.render(scene, camera); // Render scene
   let posicaoCameraX = flyCamera.object.position.getComponent(0);
   plano.desenhaPlano(posicaoCameraX);
 }
