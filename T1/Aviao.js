@@ -1,10 +1,13 @@
 import * as THREE from 'three';
+import {
+  setDefaultMaterial
+} from "../libs/util/util.js";
 
-class Aviao{
+class Aviao extends THREE.Group{
 
   //INICIO
   constructor(scene){
-
+  super();
   //angulos
   var angle90 = THREE.MathUtils.degToRad(90); //cria o angulo 90º
 
@@ -35,7 +38,7 @@ class Aviao{
   var asinha = new THREE.CapsuleGeometry(0.5 , 2, 30, 2); //asa que fica por cima
 
   //Mesh's
-  var baseMesh = new THREE.Mesh(base, setDefaultMaterial('gray'));//({color: '0x797D7F'}));
+  var baseMesh = new THREE.Mesh(base, setDefaultMaterial('gray'));
   baseMesh.position.set(0, 5, 0);
 
   var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial('blue'));
@@ -67,13 +70,14 @@ class Aviao{
   baseMesh.add(asaLateralMenorMesh);
   baseMesh.add(asinhaMesh);
   cilindroMesh.add(heliceMesh);
+  rotateCylinder(cilindroMesh);
   }
 }
-function rotateCylinder() {
+function rotateCylinder(cilinder) {
   var speed = 0.08;
   var animationOn = true; // control if animation is on or of
   if (animationOn) {
-    cilindroMesh.rotation.x +=speed; //girando o cilindro pois a helice esta nele e irá girar junto
+    cilinder.rotation.x +=speed; //girando o cilindro pois a helice esta nele e irá girar junto
   }
 } 
 export{Aviao};

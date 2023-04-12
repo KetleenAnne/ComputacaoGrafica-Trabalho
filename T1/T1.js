@@ -8,6 +8,7 @@ import {
   onWindowResize,
   createGroundPlaneWired
 } from "../libs/util/util.js";
+import { Plano }  from './Plano.js';
 import { Arvore } from './Arvore.js';
 import { Aviao } from './Aviao.js';
 
