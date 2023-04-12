@@ -1,121 +1,79 @@
 import * as THREE from 'three';
-import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
-import {
-    initRenderer,
-    initCamera,
-    initDefaultBasicLight,
-    setDefaultMaterial,
-    InfoBox,
-    onWindowResize,
-    createGroundPlaneWired
-} from "../libs/util/util.js";
 
-let scene, renderer, camera, material, light, orbit; // Initial variables
-scene = new THREE.Scene();    // Create main scene
-renderer = initRenderer();    // Init a basic renderer
-camera = initCamera(new THREE.Vector3(0, 15, 30)); // Init camera in this position
-material = setDefaultMaterial(); // create a basic material
-light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
-orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
+class Aviao{
 
-// Listen window size changes
-window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
+  //INICIO
+  constructor(scene){
 
-// Show axes (parameter is size of each axis)
-let axesHelper = new THREE.AxesHelper(12);
-scene.add(axesHelper);
+  //angulos
+  var angle90 = THREE.MathUtils.degToRad(90); //cria o angulo 90º
 
-//INICIO
+  // criando o avião
+  var base = new THREE.CylinderGeometry(1.5, 1, 12); //cria base
+  base.rotateZ(- angle90); //rotacinando o cilindro em 90°
 
-//angulos
-var angle90 = THREE.MathUtils.degToRad(90); //cria o angulo 90º
-var speed = 0.08;
-var animationOn = true; // control if animation is on or of
-                                      
+  var janela = new THREE.CapsuleGeometry( 1, 1, 20, 25 ); //cria janela
+  janela.rotateZ(- angle90); //rotacinando a janela em 90°
 
-// create the ground plane
-let plane = createGroundPlaneWired(20, 20);//plano criado com base em (libs/util/util.js tem esse codigo)
-scene.add(plane);//adiciona o plano a cena ja como grid
+  var circulo = new THREE.CircleGeometry( 1, 32 ); //circulo preto da frente do avião
+  circulo.rotateY( angle90); //rotacinando  em 90°
 
-// criando o avião
-var base = new THREE.CylinderGeometry(1.5, 1, 12); //cria base
-base.rotateZ(- angle90); //rotacinando o cilindro em 90°
+  var cilindro = new THREE.CylinderGeometry(0.2, 0.2 ,2); //cilindro que gira da frente do avião
+  cilindro.rotateZ(angle90);
 
-var janela = new THREE.CapsuleGeometry( 1, 1, 20, 25 ); //cria janela
-janela.rotateZ(- angle90); //rotacinando a janela em 90°
+  var helice = new THREE.PlaneGeometry(5, 0.5);//helice do avião
+  helice.rotateY(- angle90);
 
-var circulo = new THREE.CircleGeometry( 1, 32 ); //circulo preto da frente do avião
-circulo.rotateY( angle90); //rotacinando  em 90°
+  var asaLateralMaior = new THREE.CapsuleGeometry( 1.5, 14, 30, 2); //asa maior que fica na lateral
+  asaLateralMaior.rotateX( -angle90);
+  asaLateralMaior.rotateZ( -angle90);
 
-var cilindro = new THREE.CylinderGeometry(0.2, 0.2 ,2); //cilindro que gira da frente do avião
-cilindro.rotateZ(angle90);
+  var asaLateralMenor = new THREE.CapsuleGeometry(1, 6, 15, 2 ); // asa menor que fica mais atras do aviao
+  asaLateralMenor.rotateX(- angle90);
+  asaLateralMenor.rotateZ( -angle90);
 
-var helice = new THREE.PlaneGeometry(5, 0.5);//helice do avião
-helice.rotateY(- angle90);
+  var asinha = new THREE.CapsuleGeometry(0.5 , 2, 30, 2); //asa que fica por cima
 
-var asaLateralMaior = new THREE.CapsuleGeometry( 1.5, 14, 30, 2); //asa maior que fica na lateral
-asaLateralMaior.rotateX( -angle90);
-asaLateralMaior.rotateZ( -angle90);
+  //Mesh's
+  var baseMesh = new THREE.Mesh(base, setDefaultMaterial('gray'));//({color: '0x797D7F'}));
+  baseMesh.position.set(0, 5, 0);
 
-var asaLateralMenor = new THREE.CapsuleGeometry(1, 6, 15, 2 ); // asa menor que fica mais atras do aviao
-asaLateralMenor.rotateX(- angle90);
-asaLateralMenor.rotateZ( -angle90);
+  var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial('blue'));
+  janelaMesh.position.set(3, 1, 0);
 
-var asinha = new THREE.CapsuleGeometry(0.5 , 2, 30, 2); //asa que fica por cima
+  var circuloMesh = new THREE.Mesh(circulo, setDefaultMaterial('black'));
+  circuloMesh.position.set(6.01,0,0);
 
-//Mesh's
-var baseMesh = new THREE.Mesh(base, setDefaultMaterial('gray'));//({color: '0x797D7F'}));
-baseMesh.position.set(0, 5, 0);
+  var cilindroMesh = new THREE.Mesh(cilindro, setDefaultMaterial('black'));
+  cilindroMesh.position.set(6.01,0,0);
 
-var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial('blue'));
-janelaMesh.position.set(3, 1, 0);
+  var heliceMesh = new THREE.Mesh(helice, setDefaultMaterial('yellow', THREE.DoubleSide)); 
+  heliceMesh.position.set(0.98, 0, 0);
 
-var circuloMesh = new THREE.Mesh(circulo, setDefaultMaterial('black'));
-circuloMesh.position.set(6.01,0,0);
+  var asaLateralMaiorMesh = new THREE.Mesh(asaLateralMaior, setDefaultMaterial('gray'));
+  asaLateralMaiorMesh.position.set(2, 0, 0);
 
-var cilindroMesh = new THREE.Mesh(cilindro, setDefaultMaterial('black'));
-cilindroMesh.position.set(6.01,0,0);
+  var asaLateralMenorMesh = new THREE.Mesh(asaLateralMenor, setDefaultMaterial('gray'));
+  asaLateralMenorMesh.position.set(-5, 0, 0);
 
-var heliceMesh = new THREE.Mesh(helice, setDefaultMaterial('yellow', THREE.DoubleSide)); 
-heliceMesh.position.set(0.98, 0, 0);
+  var asinhaMesh = new THREE.Mesh(asinha, setDefaultMaterial('gray'));
+  asinhaMesh.position.set(-5.5, 1, 0);
 
-var asaLateralMaiorMesh = new THREE.Mesh(asaLateralMaior, setDefaultMaterial('gray'));
-asaLateralMaiorMesh.position.set(2, 0, 0);
-
-var asaLateralMenorMesh = new THREE.Mesh(asaLateralMenor, setDefaultMaterial('gray'));
-asaLateralMenorMesh.position.set(-5, 0, 0);
-
-var asinhaMesh = new THREE.Mesh(asinha, setDefaultMaterial('gray'));
-asinhaMesh.position.set(-5.5, 1, 0);
-
-scene.add(baseMesh);
-baseMesh.add(janelaMesh);
-baseMesh.add(circuloMesh);
-baseMesh.add(cilindroMesh);
-baseMesh.add(asaLateralMaiorMesh);
-baseMesh.add(asaLateralMenorMesh);
-baseMesh.add(asinhaMesh);
-cilindroMesh.add(heliceMesh);
-
+  scene.add(baseMesh);
+  baseMesh.add(janelaMesh);
+  baseMesh.add(circuloMesh);
+  baseMesh.add(cilindroMesh);
+  baseMesh.add(asaLateralMaiorMesh);
+  baseMesh.add(asaLateralMenorMesh);
+  baseMesh.add(asinhaMesh);
+  cilindroMesh.add(heliceMesh);
+  }
+}
 function rotateCylinder() {
+  var speed = 0.08;
+  var animationOn = true; // control if animation is on or of
   if (animationOn) {
     cilindroMesh.rotation.x +=speed; //girando o cilindro pois a helice esta nele e irá girar junto
   }
-}
-
-// Use this to show information onscreen
-let controls = new InfoBox();
-controls.add("Basic Scene");
-controls.addParagraph();
-controls.add("Use mouse to interact:");
-controls.add("* Left button to rotate");
-controls.add("* Right button to translate (pan)");
-controls.add("* Scroll to zoom in/out.");
-controls.show();
-
-render();
-function render() {
-    rotateCylinder();
-    requestAnimationFrame(render);
-    renderer.render(scene, camera) // Render scene
-}
+} 
+export{Aviao};
