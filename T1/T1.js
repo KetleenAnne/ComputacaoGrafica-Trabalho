@@ -9,7 +9,7 @@ import {
     createGroundPlaneWired
 } from "../libs/util/util.js";
 import { Arvore } from './Arvore.js';
-
+import { Aviao } from './Aviao.js';
 
 let scene, renderer,material, materialTrunk, materialLeaves, light, orbit; // Initial variables
 const numArvores = 150;
@@ -68,6 +68,9 @@ for (let i = 0; i < numArvores; i++) {
     var arvore = new Arvore(group, materialLeaves, materialTrunk);
     scene.add(group);
 }
+
+//create aviao
+var aviao = new Aviao(scene);
 
 showInformation();
 render();
