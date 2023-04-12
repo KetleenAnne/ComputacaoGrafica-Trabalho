@@ -5,8 +5,8 @@ export class Plano {
   plano1;
   plano2;
   constructor(cena) {
-    this.plano1 = createGroundPlaneWired(1000, 200, 300, 50, 3, "dimgray", "gainsboro");
-    this.plano2 = createGroundPlaneWired(1000, 200, 300, 50, 3, "dimgray", "gainsboro");
+    this.plano1 = createGroundPlaneWired(1000, 200, 300, 50, 3, "green", "lightgreen");
+    this.plano2 = createGroundPlaneWired(1000, 200, 300, 50, 3, "green", "lightgreen");
     this.plano2.position.set(1000, 0, 0);
 
     cena.add(this.plano1);
