@@ -8,17 +8,17 @@ import {
   onWindowResize,
   createGroundPlaneWired,
 } from "../libs/util/util.js";
-import { Plano } from "./Plano.js";
 import { Arvore } from "./Arvore.js";
-import { Aviao } from "./Aviao.js";
+import { Plano } from "./Plano.js";
+import { Aviao } from "./aviao.js";
 
-let scene, renderer, material, materialTrunk, materialLeaves, light, orbit; // Initial variables
-const numArvores = 150;
+let scene, renderer, aviao, materialTrunk, materialLeaves, light, orbit; // Initial variables
+const numArvores = 700;
 const clock = new THREE.Clock();
 scene = new THREE.Scene(); // Create main scene
 renderer = initRenderer(); // Init a basic renderer
 var camera = new THREE.PerspectiveCamera(
-  45,
+  65,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
@@ -32,9 +32,9 @@ light = initDefaultBasicLight(scene); // Create a basic light to illuminate the 
 
 //create a fly camera
 var flyCamera = new FlyControls(camera, renderer.domElement);
-flyCamera.movementSpeed = 80;
+flyCamera.movementSpeed = 50;
 flyCamera.domElement = renderer.domElement;
-flyCamera.rollSpeed = 0.1;
+flyCamera.rollSpeed = 0.2;
 flyCamera.autoForward = true;
 flyCamera.dragToLook = false;
 
@@ -50,7 +50,9 @@ window.addEventListener(
 // Show axes (parameter is size of each axis)
 let axesHelper = new THREE.AxesHelper(12);
 scene.add(axesHelper);
-
+if (!aviao) {
+  aviao = new Aviao(scene);
+}
 //--ARVORE--
 
 //materiais das ávores
@@ -74,9 +76,6 @@ for (let i = 0; i < numArvores; i++) {
   arvore.rotation.x = Math.PI / 2;
   plano.plano2.add(arvore);
 }
-
-//create aviao
-var aviao = new Aviao(scene);
 
 showInformation();
 render();
