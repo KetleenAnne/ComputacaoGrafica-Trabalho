@@ -17,12 +17,7 @@ const numArvores = 700;
 const clock = new THREE.Clock();
 scene = new THREE.Scene(); // Create main scene
 renderer = initRenderer(); // Init a basic renderer
-var camera = new THREE.PerspectiveCamera(
-  65,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+var camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
 var plano = new Plano(scene);
 camera.position.set(-200.0, 20.0, 0.0);
 camera.up.set(0, 1, 0);
@@ -39,13 +34,7 @@ flyCamera.autoForward = true;
 flyCamera.dragToLook = false;
 
 // Listen window size changes
-window.addEventListener(
-  "resize",
-  function () {
-    onWindowResize(camera, renderer);
-  },
-  false
-);
+window.addEventListener("resize", function () { onWindowResize(camera, renderer); }, false);
 
 // Show axes (parameter is size of each axis)
 let axesHelper = new THREE.AxesHelper(12);
