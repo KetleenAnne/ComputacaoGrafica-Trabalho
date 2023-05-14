@@ -11,7 +11,7 @@ import {
 let scene, renderer, camera, orbit; // Initial variables
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
-//renderer.domElement.style.cursor = 'none';
+  renderer.domElement.style.cursor = 'none';
 //Main Camera
 
 let camPos = new THREE.Vector3(0.0, 40.0, 100.0);
@@ -25,12 +25,13 @@ camera.lookAt(camLook);
 
 
 //Plano do Raycaster
+// Variáveis para armazenar a posição do mouse
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
 var planeGeometry = new THREE.PlaneGeometry(100, 100);
 var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
 var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
 scene.add(raycastPlane);
-
-
 
 //Luz
 
@@ -48,7 +49,7 @@ orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation
 
 // Listen window size changes
 window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
-
+window.addEventListener('mousemove', onMouseMove, false);
 // Assets manager --------------------------------
 let assetManager = {
   // Properties ---------------------------------
@@ -75,6 +76,8 @@ scene.add(axesHelper);
 
 // create the ground plane
 createCubePlane();
+createCubePlaneLateral();
+createCubePlaneLateralEsq();
 
 // Use this to show information onscreen
 let controls = new InfoBox();
@@ -92,6 +95,79 @@ loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
 //Criando aviao
 loadGLBFile('/T2/objeto/', 'low-poly_airplane', true, 13.0);
 let posicaoAviao = new THREE.Vector3(0, 10, 0);
+
+//Criando mira
+// Criar as miras sem preenchimento interno
+const tamanhoPequeno = 1.5;
+const tamanhoGrande = tamanhoPequeno*2;
+const smallSquareGeometry = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
+  new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
+  new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0),
+  new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
+  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0) // Fechar o loop
+]);
+const largeSquareGeometry = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
+  new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
+  new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
+  new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
+  new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0) // Fechar o loop
+]);
+const linhaExterna1 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
+  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0)
+]);
+const linhaExterna2 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
+  new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0)
+]);
+const linhaExterna3 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
+  new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0)
+]);
+const linhaExterna4 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
+  new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0)
+]);
+const linhaInterna1 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
+  new THREE.Vector3(-tamanhoPequeno/2, tamanhoPequeno/2, 0)
+]);
+const linhaInterna2 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
+  new THREE.Vector3(tamanhoPequeno/2, tamanhoPequeno/2, 0)
+]);
+const linhaInterna3 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0),
+  new THREE.Vector3(tamanhoPequeno/2, -tamanhoPequeno/2, 0)
+]);
+const linhaInterna4 = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
+  new THREE.Vector3(-tamanhoPequeno/2, -tamanhoPequeno/2, 0)
+]);
+
+const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+const linhavertice1 = new THREE.Line(linhaExterna1,material);
+const linhavertice2 = new THREE.Line(linhaExterna2,material);
+const linhavertice3 = new THREE.Line(linhaExterna3,material);
+const linhavertice4 = new THREE.Line(linhaExterna4,material);
+const linhaverticeinterno1 = new THREE.Line(linhaInterna1,material);
+const linhaverticeinterno2 = new THREE.Line(linhaInterna2,material);
+const linhaverticeinterno3 = new THREE.Line(linhaInterna3,material);
+const linhaverticeinterno4 = new THREE.Line(linhaInterna4,material);
+const smallSquare = new THREE.Line(smallSquareGeometry, material);
+const largeSquare = new THREE.Line(largeSquareGeometry, material);
+largeSquare.add(linhavertice1);
+largeSquare.add(linhavertice2);
+largeSquare.add(linhavertice3);
+largeSquare.add(linhavertice4);
+smallSquare.add(linhaverticeinterno1);
+smallSquare.add(linhaverticeinterno2);
+smallSquare.add(linhaverticeinterno3);
+smallSquare.add(linhaverticeinterno4);
+scene.add(smallSquare);
+scene.add(largeSquare);
 
 //Render
 render();
@@ -126,9 +202,10 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
       obj.layers.set(1);
     }
     if (obj.name == 'gun_turrent') {
-      obj.position.set(THREE.MathUtils.randFloat(-15, 15),2,THREE.MathUtils.randFloat(-15,15));
+      obj.position.set(THREE.MathUtils.randFloat(-15, 15),1,THREE.MathUtils.randFloat(-15,15));
       obj.layers.set(2);
     }
+    obj.receiveShadow = true;
     obj.castShadow = true;
     scene.add(obj);
     assetManager[modelName] = obj;
@@ -172,14 +249,14 @@ function setDirectionalLighting(position) {
 }
 
 function createCubePlane() {
-  const planeSize = 30; // Tamanho do plano
-  const cubeSize = 1; // Tamanho dos cubos
+  const planeSize = 50; // Tamanho do plano
+  const cubeSize = 5; // Tamanho dos cubos
   const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
 
   for (let i = 0; i < numCubes; i++) {
     for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, 2, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen' });
+      const cubeGeometry = new THREE.BoxGeometry(cubeSize, 1, cubeSize);
+      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
       cube.position.x = (i - numCubes / 2) * cubeSize;
       cube.position.z = (j - numCubes / 2) * cubeSize;
@@ -188,4 +265,63 @@ function createCubePlane() {
     }
   }
 }
+function createCubePlaneLateral() {
+  const planeSize = 50; // Tamanho do plano
+  const cubeSize = 5; // Tamanho dos cubos
+  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
+
+  for (let i = 0; i < numCubes; i++) {
+    for (let j = 0; j < numCubes; j++) {
+      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen' , wireframe: true});
+      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      cube.position.x = (25);
+      cube.position.y = (i - numCubes / 2) * cubeSize;
+      cube.position.z = (j - numCubes / 2) * cubeSize;
+      cube.receiveShadow = true;
+      if(cube.position.y >= 0)
+        scene.add(cube); // Adiciona o cubo à cena
+    }
+  }
+}
+function createCubePlaneLateralEsq() {
+  const planeSize = 50; // Tamanho do plano
+  const cubeSize = 5; // Tamanho dos cubos
+  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
+
+  for (let i = 0; i < numCubes; i++) {
+    for (let j = 0; j < numCubes; j++) {
+      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen' , wireframe: true});
+      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      cube.position.x = (-30);
+      cube.position.y = (i - numCubes / 2) * cubeSize;
+      cube.position.z = (j - numCubes / 2) * cubeSize;
+      cube.receiveShadow = true;
+      if(cube.position.y >= 0)
+        scene.add(cube); // Adiciona o cubo à cena
+    }
+  }
+}
+// Função para obter a posição do mouse
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // Atualizar a posição das miras com base na posição do mouse
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObject(raycastPlane);
+
+  if (intersects.length > 0) {
+      const intersection = intersects[0];
+      smallSquare.position.copy(intersection.point);
+
+      const largeSquareSpeed = 1;
+      const direction = intersection.point.clone().sub(largeSquare.position).normalize();
+
+      largeSquare.position.add(direction.multiplyScalar(largeSquareSpeed));
+  }
+}
+
 
