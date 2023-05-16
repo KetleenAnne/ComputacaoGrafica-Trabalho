@@ -36,7 +36,7 @@ class Aviao extends THREE.Group {
 
     //Mesh's
     var baseMesh = new THREE.Mesh(base, setDefaultMaterial("gray"));
-    baseMesh.position.set(0, 5, 0);
+    baseMesh.position.set(-150, 15, 0);
 
     var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial("blue"));
     janelaMesh.position.set(3, 1, 0);
@@ -78,7 +78,7 @@ class Aviao extends THREE.Group {
     cilindroMesh.add(heliceMesh);
 
     this.rotateCylinder = function (delta) {
-      var speed = 0.08;
+      var speed = 1.2;
       var animationOn = true; // control if animation is on or of
       if (animationOn) {
         cilindroMesh.rotation.x += speed; //girando o cilindro pois a helice esta nele e irá girar junto
