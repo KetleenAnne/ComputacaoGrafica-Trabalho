@@ -9,7 +9,6 @@ import {
 import { plane } from "./Plano.js"; 
 
 let scene, renderer, light, orbit; // Initial variables
-const numArvores = 700;
 const clock = new THREE.Clock();
 scene = new THREE.Scene(); // Create main scene
 renderer = initRenderer(); // Init a basic renderer
@@ -26,7 +25,8 @@ camera.lookAt(0, 0, 0);
 
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
 orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
-plane(scene);
+let planeGroup = plane();
+scene.add(planeGroup);
 // Listen window size changes
 window.addEventListener(
   "resize",
