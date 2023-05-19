@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
+import { plane } from './Plano.js';
 import {
   initRenderer,
   InfoBox,
@@ -57,12 +58,13 @@ window.addEventListener('mousemove', onMouseMove, false);
 let assetManager = {
   // Properties ---------------------------------
   aviao: null,
+  turreta: null,
   allLoaded: false,
 
   // Functions ----------------------------------
   checkLoaded: function () {
     if (!this.allLoaded) {
-      if (this.aviao) {
+      if (this.aviao && this.turreta) {
         this.allLoaded = true;
         loadingMessage.hide();
       }
@@ -77,10 +79,6 @@ let assetManager = {
 let axesHelper = new THREE.AxesHelper(30);
 scene.add(axesHelper);
 
-// create the ground plane
-createCubePlane();
-createCubePlaneLateral();
-createCubePlaneLateralEsq();
 
 // Use this to show information onscreen
 let controls = new InfoBox();
@@ -103,7 +101,6 @@ var destino =  new THREE.Vector3( 0.0, 0.0, 1.0);
 var aviaoSpeed = 1;
 loadGLBFile('/T2/objeto/', 'low-poly_airplane', true, 13.0);
 let posicaoAviao = new THREE.Vector3(0, 10, 0);
-
 //Criando mira
 // Criar as miras sem preenchimento interno
 const tamanhoPequeno = 1.5;
@@ -183,6 +180,7 @@ scene.add(largeSquare);
 render();
 
 function render() {
+  movePlane();
   assetManager.checkLoaded();
   requestAnimationFrame(render);
   renderer.render(scene, camera) // Render scene
@@ -260,61 +258,16 @@ function setDirectionalLighting(position) {
   scene.add(dirLight);
 }
 
-function createCubePlane() {
-  const planeSize = 50; // Tamanho do plano
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
+//plano
 
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, 1, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.x = (i - numCubes / 2) * cubeSize;
-      cube.position.z = (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      scene.add(cube); // Adiciona o cubo à cena
-    }
-  }
-}
-function createCubePlaneLateral() {
-  const planeSize = 50; // Tamanho do plano
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
+function movePlane(){
+ /* let posicaoInicial = new THREE.Vector3(0,0,0);
 
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize,15,15,15);
-      const cubeMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.x = (25);
-      cube.position.y = (i - numCubes / 2) * cubeSize;
-      cube.position.z = (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      if(cube.position.y >= 0)
-        scene.add(cube); // Adiciona o cubo à cena
-    }
-  }
+  let plane1 = plane(posicaoInicial, 300);
+  scene.add(plane1);*/
+  
 }
-function createCubePlaneLateralEsq() {
-  const planeSize = 50; // Tamanho do plano
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
 
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.x = (-30);
-      cube.position.y = (i - numCubes / 2) * cubeSize;
-      cube.position.z = (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      if(cube.position.y >= 0)
-        scene.add(cube); // Adiciona o cubo à cena
-    }
-  }
-}
 // Função para obter a posição do mouse
 function onMouseMove(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
