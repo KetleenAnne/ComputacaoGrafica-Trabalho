@@ -18,11 +18,16 @@ class Aviao extends THREE.Group {
     var circulo = new THREE.CircleGeometry(1, 32); //circulo preto da frente do avião
     circulo.rotateY(angle90); //rotacinando  em 90°
 
+<<<<<<< HEAD
     var cilindro = new THREE.CylinderGeometry(0.2, 0.2, 2); //cilindro que gira da frente do avião
     cilindro.rotateZ(angle90);
 
     var helice = new THREE.PlaneGeometry(5, 0.5); //helice do avião
     helice.rotateY(-angle90);
+=======
+  var circulo = new THREE.CircleGeometry( 1, 32 ); //circulo preto da frente do avião
+  circulo.rotateY( angle90); //rotacinando  em 90°
+>>>>>>> f8dc1c7 (corrigindo material do aviao)
 
     var asaLateralMaior = new THREE.CapsuleGeometry(1.5, 14, 30, 2); //asa maior que fica na lateral
     asaLateralMaior.rotateX(-angle90);
@@ -41,6 +46,7 @@ class Aviao extends THREE.Group {
     var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial("blue"));
     janelaMesh.position.set(3, 1, 0);
 
+<<<<<<< HEAD
     var circuloMesh = new THREE.Mesh(circulo, setDefaultMaterial("black"));
     circuloMesh.position.set(6.01, 0, 0);
 
@@ -84,6 +90,41 @@ class Aviao extends THREE.Group {
         cilindroMesh.rotation.x += speed; //girando o cilindro pois a helice esta nele e irá girar junto
       }
     };
+=======
+  //Mesh's
+  var baseMesh = new THREE.Mesh(base, setDefaultMaterial('gray'));//({color: '0x797D7F'}));
+  baseMesh.position.set(0, 5, 0);
+
+  var janelaMesh = new THREE.Mesh(janela, setDefaultMaterial('blue'));
+  janelaMesh.position.set(3, 1, 0);
+
+  var circuloMesh = new THREE.Mesh(circulo, setDefaultMaterial('black'));
+  circuloMesh.position.set(6.01,0,0);
+
+  var cilindroMesh = new THREE.Mesh(cilindro, setDefaultMaterial('black'));
+  cilindroMesh.position.set(6.01,0,0);
+
+  var heliceMesh = new THREE.Mesh(helice, setDefaultMaterial('yellow', THREE.DoubleSide)); 
+  heliceMesh.position.set(0.98, 0, 0);
+
+  var asaLateralMaiorMesh = new THREE.Mesh(asaLateralMaior, setDefaultMaterial('gray'));
+  asaLateralMaiorMesh.position.set(2, 0, 0);
+
+  var asaLateralMenorMesh = new THREE.Mesh(asaLateralMenor, setDefaultMaterial('gray'));
+  asaLateralMenorMesh.position.set(-5, 0, 0);
+
+  var asinhaMesh = new THREE.Mesh(asinha, setDefaultMaterial('gray'));
+  asinhaMesh.position.set(-5.5, 1, 0);
+
+  scene.add(baseMesh);
+  baseMesh.add(janelaMesh);
+  baseMesh.add(circuloMesh);
+  baseMesh.add(cilindroMesh);
+  baseMesh.add(asaLateralMaiorMesh);
+  baseMesh.add(asaLateralMenorMesh);
+  baseMesh.add(asinhaMesh);
+  cilindroMesh.add(heliceMesh);
+>>>>>>> f8dc1c7 (corrigindo material do aviao)
   }
 }
 export { Aviao };
