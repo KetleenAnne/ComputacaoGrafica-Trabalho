@@ -9,12 +9,13 @@ import {
 } from "../libs/util/util.js";
 
 let scene, renderer, camera, orbit; // Initial variables
+
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
   renderer.domElement.style.cursor = 'none';
 //Main Camera
 
-let camPos = new THREE.Vector3(0.0, 40.0, 100.0);
+let camPos = new THREE.Vector3(0.0, 30.0, 70.0);
 let camUp = new THREE.Vector3(0.0, 1.0, 0.0);
 let camLook = new THREE.Vector3(0.0, 0.0, 0.0);
 
@@ -28,9 +29,11 @@ camera.lookAt(camLook);
 // Variáveis para armazenar a posição do mouse
 const mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
-var planeGeometry = new THREE.PlaneGeometry(100, 100);
+var planeGeometry = new THREE.PlaneGeometry(50, 48);
 var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
 var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+raycastPlane.translateY(24);
+raycastPlane.translateX(-2.8);
 scene.add(raycastPlane);
 
 //Luz
@@ -90,9 +93,14 @@ controls.add("* Scroll to zoom in/out.");
 controls.show();
 
 //Criando Torreta
-loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
+for (let i = 0; i < 3; i++) {
+  loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
+}
 
 //Criando aviao
+var movimentoAviao = null;
+var destino =  new THREE.Vector3( 0.0, 0.0, 1.0);
+var aviaoSpeed = 1;
 loadGLBFile('/T2/objeto/', 'low-poly_airplane', true, 13.0);
 let posicaoAviao = new THREE.Vector3(0, 10, 0);
 
@@ -166,6 +174,8 @@ smallSquare.add(linhaverticeinterno1);
 smallSquare.add(linhaverticeinterno2);
 smallSquare.add(linhaverticeinterno3);
 smallSquare.add(linhaverticeinterno4);
+smallSquare.position.set(0,30,0);
+largeSquare.position.set(0,30,0);
 scene.add(smallSquare);
 scene.add(largeSquare);
 
@@ -200,11 +210,13 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
       obj.rotateY(3.13);
       obj.position.copy(posicaoAviao);
       obj.layers.set(1);
+      movimentoAviao = obj;
     }
     if (obj.name == 'gun_turrent') {
       obj.position.set(THREE.MathUtils.randFloat(-15, 15),1,THREE.MathUtils.randFloat(-15,15));
       obj.layers.set(2);
     }
+    
     obj.receiveShadow = true;
     obj.castShadow = true;
     scene.add(obj);
@@ -272,8 +284,8 @@ function createCubePlaneLateral() {
 
   for (let i = 0; i < numCubes; i++) {
     for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen' , wireframe: true});
+      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize,15,15,15);
+      const cubeMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
       cube.position.x = (25);
       cube.position.y = (i - numCubes / 2) * cubeSize;
@@ -292,7 +304,7 @@ function createCubePlaneLateralEsq() {
   for (let i = 0; i < numCubes; i++) {
     for (let j = 0; j < numCubes; j++) {
       const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen' , wireframe: true});
+      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
       cube.position.x = (-30);
       cube.position.y = (i - numCubes / 2) * cubeSize;
@@ -316,7 +328,6 @@ function onMouseMove(event) {
   if (intersects.length > 0) {
       const intersection = intersects[0];
       smallSquare.position.copy(intersection.point);
-
       const largeSquareSpeed = 1;
       const direction = intersection.point.clone().sub(largeSquare.position).normalize();
 
