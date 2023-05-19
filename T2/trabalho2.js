@@ -55,12 +55,13 @@ window.addEventListener('mousemove', onMouseMove, false);
 let assetManager = {
   // Properties ---------------------------------
   aviao: null,
+  turreta: null,
   allLoaded: false,
 
   // Functions ----------------------------------
   checkLoaded: function () {
     if (!this.allLoaded) {
-      if (this.aviao) {
+      if (this.aviao && this.turreta) {
         this.allLoaded = true;
         loadingMessage.hide();
       }
