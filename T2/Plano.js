@@ -1,8 +1,7 @@
 import * as THREE from  '../build/three.module.js';
 
-export function plane(initialPosition){
-  const planeSize = 100 // Tamanho do plano
-  const cubeSize = 20; // Tamanho dos cubos
+export function plane(initialPosition, planeSize){
+  const cubeSize = 25; // Tamanho dos cubos
   const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
   const planeGroup = new THREE.Group();
   createCubePlane(cubeSize, numCubes, initialPosition, planeGroup);
