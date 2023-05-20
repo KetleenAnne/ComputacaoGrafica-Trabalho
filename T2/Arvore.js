@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 
-<<<<<<< HEAD
-export class Arvore extends THREE.Group {
-=======
 export class Arvore extends THREE.Group{
->>>>>>> main
     constructor(materialfolha, materialtronco) {
         super();
         // create a tree
@@ -44,8 +40,4 @@ export class Arvore extends THREE.Group{
         this.add(trunkMesh);
     }
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> main
