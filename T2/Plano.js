@@ -1,68 +1,33 @@
-import * as THREE from  '../build/three.module.js';
+import * as THREE from "three";
 
-export function plane(initialPosition, planeSize){
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
-  const planeGroup = new THREE.Group();
-  createCubePlane(cubeSize, numCubes, initialPosition, planeGroup);
-  createCubePlaneLateralDir(cubeSize, numCubes, initialPosition, planeGroup, planeSize);
-  createCubePlaneLateralEsq(cubeSize, numCubes, initialPosition, planeGroup, planeSize);
-  
-  return planeGroup;
+export function createPlane(){
+    const materialPlano = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
+    const materialLinha = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }); 
+
+    const planoGeometry = new THREE.BoxGeometry(300, 0, 500);
+    const plano = new THREE.Mesh(planoGeometry, materialPlano);
+    const linePlano = new THREE.Mesh(planoGeometry, materialLinha);
+
+    const lateralGeometry = new THREE.BoxGeometry(0, 150, 500);
+
+    const lateralEsq = new THREE.Mesh(lateralGeometry, materialPlano);
+    const lineLateralEsq = new THREE.Mesh(lateralGeometry, materialLinha);
+
+    const lateralDir = new THREE.Mesh(new THREE.BoxGeometry(0, 150, 500), materialPlano);
+    const lineLateralDir = new THREE.Mesh(lateralGeometry, materialLinha);
+
+    plano.position.set(0, 0 , 0);
+
+    lateralEsq.position.set(-150, 75, 0);
+
+    lateralDir.position.set(150, 75, 0);
+
+    plano.add(linePlano);
+    plano.add(lateralEsq);
+    plano.add(lateralDir);
+
+    lateralEsq.add(lineLateralEsq);
+    lateralDir.add(lineLateralDir);
+
+  return plano;
 } 
-
-function createCubePlane(cubeSize, numCubes, initialPosition, planeGroup) {
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const edges = new THREE.EdgesGeometry(cubeGeometry);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      line.position.x = cube.position.x = initialPosition.x + (i - numCubes / 2) * cubeSize;
-      line.position.z = cube.position.z = initialPosition.z + (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      planeGroup.add(cube); // Adiciona o cubo à cena
-      planeGroup.add(line);
-    }
-  }
-}
-function createCubePlaneLateralDir(cubeSize, numCubes, initialPosition, planeGroup, planeSize) {
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const edges = new THREE.EdgesGeometry(cubeGeometry);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      line.position.x = cube.position.x = initialPosition.x + (-planeSize / 2);
-      line.position.y = cube.position.y = initialPosition.y + (i - numCubes / 2) * cubeSize;
-      line.position.z = cube.position.z = initialPosition.z + (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      if(cube.position.y >= 0){
-        planeGroup.add(cube); // Adiciona o cubo à cena      
-        planeGroup.add(line);
-      }
-
-    }
-  }
-}
-function createCubePlaneLateralEsq(cubeSize, numCubes, initialPosition, planeGroup, planeSize) {
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const edges = new THREE.EdgesGeometry(cubeGeometry);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      line.position.x = cube.position.x = initialPosition.x + (planeSize / 2);
-      line.position.y = cube.position.y = initialPosition.y + (i - numCubes / 2) * cubeSize;
-      line.position.z = cube.position.z = initialPosition.z + (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      if(cube.position.y >= 0){
-        planeGroup.add(cube); // Adiciona o cubo à cena
-        planeGroup.add(line);
-      }
-    }
-  }
-}

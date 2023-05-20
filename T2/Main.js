@@ -6,7 +6,7 @@ import {
   onWindowResize,
   InfoBox,
 } from "../libs/util/util.js";
-import { createPlane } from "./box.js"; 
+import { createPlane } from "./Plano.js"; 
 
 let scene, renderer, light, orbit; // Initial variables
 const clock = new THREE.Clock();
