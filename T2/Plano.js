@@ -1,46 +1,7 @@
 import * as THREE from  '../build/three.module.js';
-export class Plano {
-  plano1;
-  plano2;
-  plano3;
-  plano4;
-  constructor(scena) {
-    let positions = new THREE.Vector3(0,0,0);
-    this.plano1 = createPlane(positions, 200)
-    this.plano2 = 
-    this.plano2.position.set(200, 0, 0);
 
-    scena.add(this.plano1);
-    scena.add(this.plano2);
-
-    this.limiteCriadorDePlano = 100;
-    this.alternadorDePlano = true;
-    this.novaPosition = 0;
-  }
-
-
-  desenhaPlano(posicaoCameraX) {
-    let proxPlano = 400;
-
-    if (posicaoCameraX > this.limiteCriadorDePlano) {
-      this.limiteCriadorDePlano += 100;
-
-      if (this.alternadorDePlano) {
-        this.novaPosition = this.plano1.position.x + proxPlano;
-        this.plano1.position.set(this.novaPosition, 0, 0);
-        this.alternadorDePlano = false;
-      } else {
-        this.novaPosition = this.plano2.position.x + proxPlano;
-        this.plano2.position.set(this.novaPosition, 0, 0);
-        this.alternadorDePlano = true;
-      }
-    }
-  }
-
-}
-
-export function createPlane(initialPosition, planeSize){
-  const cubeSize = 50; // Tamanho dos cubos
+export function plane(initialPosition, planeSize){
+  const cubeSize = 5; // Tamanho dos cubos
   const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
   const planeGroup = new THREE.Group();
   createCubePlane(cubeSize, numCubes, initialPosition, planeGroup);
