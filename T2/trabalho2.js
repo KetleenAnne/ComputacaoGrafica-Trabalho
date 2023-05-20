@@ -1,7 +1,8 @@
   import * as THREE from 'three';
   import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
   import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-  import { plane } from './Plano.js';
+  import { Arvore } from "./Arvore.js";
+  import { Plano } from "./Plano.js";
   import {
     initRenderer,
     InfoBox,
@@ -33,6 +34,8 @@
   let cameraHolder = new THREE.Object3D();
   cameraHolder.add(camera);
   scene.add(cameraHolder);
+
+  var plano = new Plano(scene);
 
   //Plano do Raycaster
   // Variáveis para armazenar a posição do mouse
@@ -98,6 +101,31 @@
   controls.add("* Right button to translate (pan)");
   controls.add("* Scroll to zoom in/out.");
   controls.show();
+
+
+  //--ARVORE--
+  const numArvores = 700;
+  //materiais das ávores
+  var materialTrunk = new THREE.MeshPhongMaterial({ color: 'brown'});
+  materialTrunk.transparent = true;
+  //material folha
+  var materialLeaves = new THREE.MeshPhongMaterial({ color: 'green'});
+  materialLeaves.transparent = true;
+
+  // create a tree
+  for (let i = 0; i < numArvores; i++) {
+    var arvore = new Arvore(materialLeaves, materialTrunk);
+    scene.add(arvore);
+    arvore.rotation.y = Math.PI / 2;
+    plano.plano1.add(arvore);
+  }
+
+  for (let i = 0; i < numArvores; i++) {
+    var arvore = new Arvore(materialLeaves, materialTrunk);
+    scene.add(arvore);
+    arvore.rotation.y = Math.PI / 2;
+    plano.plano2.add(arvore);
+  }
 
   //Criando Torreta
   for (let i = 0; i < 3; i++) {
@@ -189,9 +217,9 @@
   render();
 
   function render() {
-    movePlane();
     assetManager.checkLoaded();
     requestAnimationFrame(render);
+    
     if (!isPaused) {
       const velocidadePadrao = 1; // Velocidade padrão dos outros objetos na cena
       const proporcaoVelocidade = velocidadePadrao / aviaoSpeed;
@@ -201,6 +229,9 @@
       smallSquare.position.z -= aviaoSpeed * proporcaoVelocidade;
       raycastPlane.position.z -= aviaoSpeed *proporcaoVelocidade;
       
+      // desenha o plano
+      let posicaoCameraX = cameraHolder.position.z;
+      plano.desenhaPlano(posicaoCameraX);
 
       // Atualizar a posição das miras com base na posição do mouse
       raycaster.setFromCamera(mouse, camera);
@@ -332,16 +363,6 @@
     dirLight.name = "Direction Light";
 
     scene.add(dirLight);
-  }
-
-  //plano
-
-  function movePlane() {
-    let posicaoInicial = new THREE.Vector3(0, 0, 0);
-
-    let plane1 = plane(posicaoInicial, 50);
-    //scene.add(plane1);
-
   }
 
   // Função para obter a posição do mouse

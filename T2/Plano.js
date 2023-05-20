@@ -1,9 +1,51 @@
 import * as THREE from "three";
 
-export function createPlane(){
+export class Plano {
+  plano1;
+  plano2;
+  plano3;
+  constructor(scena) {
+    this.plano1 = createPlane();
+    this.plano2 = createPlane();
+    this.plano3 = createPlane();
+
+    this.plano2.position.set(0, 0, 500);
+    this.plano3.position.set(0, 0, 100);
+
+    scena.add(this.plano1);
+    scena.add(this.plano2);
+
+    this.limiteCriadorDePlano = 500;
+    this.alternadorDePlano = true;
+    this.novaPosition = 0;
+  }
+  
+  desenhaPlano(posicaoCameraX) {
+    let proxPlano = 500;
+
+    if (posicaoCameraX > this.limiteCriadorDePlano) {
+      this.limiteCriadorDePlano += 500;
+
+      if (this.alternadorDePlano) {
+        this.novaPosition = this.plano1.position.z + proxPlano;
+        this.plano1.position.set(0, 0, this.novaPosition);
+        this.alternadorDePlano = false;
+      } else {
+        this.novaPosition = this.plano2.position.z + proxPlano;
+        this.plano2.position.set(0, 0, this.novaPosition);
+        this.alternadorDePlano = true;
+      }
+    }
+  }
+
+}
+
+function createPlane(){
     const materialPlano = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
     const materialLinha = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }); 
 
+    //largura do plano 300
+    //tamanho do plano 500
     const planoGeometry = new THREE.BoxGeometry(300, 0, 500);
     const plano = new THREE.Mesh(planoGeometry, materialPlano);
     const linePlano = new THREE.Mesh(planoGeometry, materialLinha);
