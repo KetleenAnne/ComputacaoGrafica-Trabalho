@@ -6,8 +6,7 @@ import {
   onWindowResize,
   InfoBox,
 } from "../libs/util/util.js";
-import { plane } from "./Plano.js"; 
-import { Vector3 } from "../build/three.module.js";
+import { createPlane } from "./box.js"; 
 
 let scene, renderer, light, orbit; // Initial variables
 const clock = new THREE.Clock();
@@ -36,6 +35,10 @@ window.addEventListener(
   false
 );
 
+
+let plano = createPlane();
+scene.add(plano);
+
 // Show axes (parameter is size of each axis)
 let axesHelper = new THREE.AxesHelper(12);
 scene.add(axesHelper);
@@ -55,12 +58,10 @@ function render() {
   const delta = clock.getDelta();
   requestAnimationFrame(render);
   renderer.render(scene, camera); 
-  movePlane();
-
 }
 
 
-function movePlane(){
+/*function movePlane(){
  
 const planeSize = 100; // Tamanho do plano
 const maxPlanes = 3; // Número máximo de planos visíveis
@@ -125,7 +126,7 @@ function setOpacity(object, opacity) {
       node.material.transparent = opacity < 1;
     }
   });
-}
+}*/
 
   
 export { scene };

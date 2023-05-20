@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-import { plane } from './Plano.js';
 import {
   initRenderer,
   InfoBox,
@@ -96,9 +95,7 @@ for (let i = 0; i < 3; i++) {
 }
 
 //Criando aviao
-var movimentoAviao = null;
-var destino =  new THREE.Vector3( 0.0, 0.0, 1.0);
-var aviaoSpeed = 1;
+
 loadGLBFile('/T2/objeto/', 'low-poly_airplane', true, 13.0);
 let posicaoAviao = new THREE.Vector3(0, 10, 0);
 //Criando mira
@@ -180,7 +177,6 @@ scene.add(largeSquare);
 render();
 
 function render() {
-  movePlane();
   assetManager.checkLoaded();
   requestAnimationFrame(render);
   renderer.render(scene, camera) // Render scene
@@ -256,16 +252,6 @@ function setDirectionalLighting(position) {
   dirLight.name = "Direction Light";
 
   scene.add(dirLight);
-}
-
-//plano
-
-function movePlane(){
- /* let posicaoInicial = new THREE.Vector3(0,0,0);
-
-  let plane1 = plane(posicaoInicial, 300);
-  scene.add(plane1);*/
-  
 }
 
 // Função para obter a posição do mouse
