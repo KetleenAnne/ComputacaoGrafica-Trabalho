@@ -9,6 +9,7 @@ export class Plano {
     this.plano2 = createPlane();
     this.plano3 = createPlane();
 
+    this.plano1.position.set(0, 0, 0);
     this.plano2.position.set(0, 0, -500);
     this.plano3.position.set(0, 0, -1000);
 
@@ -16,7 +17,7 @@ export class Plano {
     scena.add(this.plano2);
     scena.add(this.plano3);
 
-    this.limiteCriadorDePlano = -500;
+    this.limiteCriadorDePlano = -400;
     this.alternadorDePlano = 0;
     this.novaPosition = 0;
   }
@@ -25,7 +26,7 @@ export class Plano {
     let proxPlano = -1500;
 
     if (posicaoCameraX < this.limiteCriadorDePlano) {
-      this.limiteCriadorDePlano += 500;
+      this.limiteCriadorDePlano -= 500;
 
       if (this.alternadorDePlano === 0) {
         this.novaPosition = this.plano1.position.z + proxPlano;
@@ -69,6 +70,10 @@ function createPlane(){
     lateralEsq.position.set(-150, 75, 0);
 
     lateralDir.position.set(150, 75, 0);
+
+    plano.receiveShadow = true;
+    lateralDir.receiveShadow = true;
+    lateralEsq.receiveShadow = true;
 
     plano.add(linePlano);
     plano.add(lateralEsq);
