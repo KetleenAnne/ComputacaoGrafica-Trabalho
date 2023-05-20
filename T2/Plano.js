@@ -9,31 +9,37 @@ export class Plano {
     this.plano2 = createPlane();
     this.plano3 = createPlane();
 
-    this.plano2.position.set(0, 0, 500);
-    this.plano3.position.set(0, 0, 100);
+    this.plano2.position.set(0, 0, -500);
+    this.plano3.position.set(0, 0, -1000);
 
     scena.add(this.plano1);
     scena.add(this.plano2);
+    scena.add(this.plano3);
 
-    this.limiteCriadorDePlano = 500;
-    this.alternadorDePlano = true;
+    this.limiteCriadorDePlano = -500;
+    this.alternadorDePlano = 2;
     this.novaPosition = 0;
   }
   
   desenhaPlano(posicaoCameraX) {
-    let proxPlano = 500;
+    let proxPlano = -1500;
 
-    if (posicaoCameraX > this.limiteCriadorDePlano) {
+    if (posicaoCameraX < this.limiteCriadorDePlano) {
       this.limiteCriadorDePlano += 500;
 
-      if (this.alternadorDePlano) {
+      if (this.alternadorDePlano === 0) {
         this.novaPosition = this.plano1.position.z + proxPlano;
         this.plano1.position.set(0, 0, this.novaPosition);
-        this.alternadorDePlano = false;
-      } else {
+        this.alternadorDePlano = 1;
+      } else if (this.alternadorDePlano === 1){
         this.novaPosition = this.plano2.position.z + proxPlano;
         this.plano2.position.set(0, 0, this.novaPosition);
-        this.alternadorDePlano = true;
+        this.alternadorDePlano = 2;
+      }
+      else{
+        this.novaPosition = this.plano3.position.z + proxPlano;
+        this.plano3.position.set(0, 0, this.novaPosition);
+        this.alternadorDePlano = 0;
       }
     }
   }

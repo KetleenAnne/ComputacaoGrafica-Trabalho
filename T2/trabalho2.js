@@ -16,8 +16,6 @@
   let isCursorVisible = false;
   document.body.style.cursor = 'none';
   let torreta;
-  let materialfolha =new THREE.MeshPhongMaterial();
-  let materialtronco = new THREE.MeshLambertMaterial();
   var lastMousePosition = new THREE.Vector2(); // Última posição do mouse
   scene = new THREE.Scene();    // Create main scene
   renderer = new THREE.WebGLRenderer();
@@ -41,10 +39,10 @@
   // Variáveis para armazenar a posição do mouse
   const mouse = new THREE.Vector2();
   const raycaster = new THREE.Raycaster();
-  var planeGeometry = new THREE.PlaneGeometry(50, 48);
+  var planeGeometry = new THREE.PlaneGeometry(100, 98);
   var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
   var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
-  raycastPlane.translateY(24);
+  raycastPlane.translateY(15);
   raycastPlane.translateX(-2.8);
   scene.add(raycastPlane);
 
@@ -125,6 +123,13 @@
     scene.add(arvore);
     arvore.rotation.y = Math.PI / 2;
     plano.plano2.add(arvore);
+  }
+  
+  for (let i = 0; i < numArvores; i++) {
+    var arvore = new Arvore(materialLeaves, materialTrunk);
+    scene.add(arvore);
+    arvore.rotation.y = Math.PI / 2;
+    plano.plano3.add(arvore);
   }
 
   //Criando Torreta
@@ -294,7 +299,7 @@
         movimentoAviao = obj;
       }
       if (obj.name == 'gun_turrent') {
-        obj.position.set(THREE.MathUtils.randFloat(-15, 15), 3, THREE.MathUtils.randFloat(-15, 15));
+        obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150));
         obj.rotateY(1.57);
         obj.layers.set(2);
         obj.userData.collidable = true;
