@@ -17,7 +17,7 @@ export class Plano {
     scena.add(this.plano3);
 
     this.limiteCriadorDePlano = -500;
-    this.alternadorDePlano = 2;
+    this.alternadorDePlano = 0;
     this.novaPosition = 0;
   }
   

@@ -134,7 +134,7 @@
 
   //Criando Torreta
   for (let i = 0; i < 3; i++) {
-    loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
+    loadGLBFile('/T2/objeto/', 'gun_turrent', true, 7.0);
   }
 
   //Criando aviao
@@ -235,8 +235,8 @@
       raycastPlane.position.z -= aviaoSpeed *proporcaoVelocidade;
       
       // desenha o plano
-      let posicaoCameraX = cameraHolder.position.z;
-      plano.desenhaPlano(posicaoCameraX);
+      let posicaoCameraZ = cameraHolder.position.z;
+      plano.desenhaPlano(posicaoCameraZ);
 
       // Atualizar a posição das miras com base na posição do mouse
       raycaster.setFromCamera(mouse, camera);
@@ -299,7 +299,9 @@
         movimentoAviao = obj;
       }
       if (obj.name == 'gun_turrent') {
-        obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150));
+        plano.plano1.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
+        plano.plano2.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
+        plano.plano3.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
         obj.rotateY(1.57);
         obj.layers.set(2);
         obj.userData.collidable = true;
