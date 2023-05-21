@@ -1,4 +1,5 @@
   import * as THREE from 'three';
+  import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
   import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
   import { Arvore } from "./Arvore.js";
   import { Plano } from "./Plano.js";
@@ -10,7 +11,7 @@
   } from "../libs/util/util.js";
   import { MeshLambertMaterial, MeshPhongMaterial } from '../build/three.module.js';
 
-  let scene, renderer, camera; // Initial variables
+  let scene, renderer, camera, orbit; // Initial variables
   let isPaused = false;
   let isCursorVisible = false;
   document.body.style.cursor = 'none';
@@ -56,7 +57,7 @@
   setDirectionalLighting(lightPosition);
 
   //definindo controles
-  //orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
+  orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 
   // Listen window size changes
   window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);

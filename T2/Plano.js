@@ -17,6 +17,12 @@ export class Plano {
     scena.add(this.plano2);
     scena.add(this.plano3);
 
+    /*this.planoAtual = this.plano1;
+
+    this.plano1.material.opacity = 1;
+    this.plano2.material.opacity = 0.5;
+    this.plano3.material.opacity = 0.25;*/
+
     this.limiteCriadorDePlano = -400;
     this.alternadorDePlano = 0;
     this.novaPosition = 0;
