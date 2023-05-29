@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 
-export class Arvore{ 
+export class Arvore extends THREE.Object3D {  
     constructor(plano) {
+        super();
         // create material
         var materialTrunk = new THREE.MeshPhongMaterial({ color: 'brown'});
        // materialTrunk.transparent = true;
         //material folha
-        var materialLeaves = new THREE.MeshPhongMaterial({ color: 'green', shininess:"200"});
+        var materialLeaves = new THREE.MeshPhongMaterial({ color: 'green'});
        // materialLeaves.transparent = true;
 
 
@@ -26,7 +27,6 @@ export class Arvore{
         var leaves3Mesh = new THREE.Mesh(leaves3, materialLeaves);//mesh da 3 camada
 
         // position the trunk. Set y to half of height of trunk
-        trunkMesh.position.set(THREE.MathUtils.randInt(-150, 150), 1.5 , THREE.MathUtils.randInt(-250, 250));//posição do tronco
         leavesMesh.position.set(0, 4, 0);//posição em relação ao tronco da 1 camada
         leaves2Mesh.position.set(0, 3, 0);//posição em relação ao tronco da 2 camada
         leaves3Mesh.position.set(0, 2, 0);//posição em relação ao tronco da 3 camada
@@ -46,8 +46,11 @@ export class Arvore{
         trunkMesh.add(leaves3Mesh);//adiciona a terceira camada ao tronco
 
         trunkMesh.rotation.y = Math.PI / 2;
+        
+        this.add(trunkMesh);
+        this.position.set(THREE.MathUtils.randInt(-150, 150), 1.5 , THREE.MathUtils.randInt(-250, 250));
 
-        plano.add(trunkMesh);
+        plano.add(this);
     }
 
 }

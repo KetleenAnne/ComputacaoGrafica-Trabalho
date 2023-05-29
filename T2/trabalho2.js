@@ -8,6 +8,7 @@
     onWindowResize,
     getMaxSize
   } from "../libs/util/util.js";
+
   let scene, renderer, camera, orbit; // Initial variables
   let isPaused = false;
   let isCursorVisible = false;
@@ -265,9 +266,9 @@
         movimentoAviao = obj;
       }
       if (obj.name == 'gun_turrent') {
-        plano.plano1.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
+       /* plano.plano1.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
         plano.plano2.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
-        plano.plano3.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
+        plano.plano3.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));*/ //aqui estas dando object 3d
         obj.rotateY(1.57);
         obj.layers.set(2);
         obj.userData.collidable = true;
