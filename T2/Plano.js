@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { Arvore } from "./Arvore.js";
+
 
 export class Plano {
   plano1;
@@ -54,39 +56,53 @@ export class Plano {
 }
 
 function createPlane(){
+  //material do plano
     const materialPlano = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
     const materialLinha = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }); 
 
-    //largura do plano 300
-    //tamanho do plano 500
-    const planoGeometry = new THREE.BoxGeometry(300, 0, 500);
-    const plano = new THREE.Mesh(planoGeometry, materialPlano);
-    const linePlano = new THREE.Mesh(planoGeometry, materialLinha);
-
+  // geometria plano e laterais
+    const planoGeometry = new THREE.BoxGeometry(300, 0, 500); //largura 300, comprimento 500
     const lateralGeometry = new THREE.BoxGeometry(0, 150, 500);
 
+  //Mesh plano e laterais
+    const plano = new THREE.Mesh(planoGeometry, materialPlano);
     const lateralEsq = new THREE.Mesh(lateralGeometry, materialPlano);
-    const lineLateralEsq = new THREE.Mesh(lateralGeometry, materialLinha);
+    const lateralDir = new THREE.Mesh(lateralGeometry, materialPlano);
 
-    const lateralDir = new THREE.Mesh(new THREE.BoxGeometry(0, 150, 500), materialPlano);
+  //Mesh linhas
+    const linePlano = new THREE.Mesh(planoGeometry, materialLinha);
+    const lineLateralEsq = new THREE.Mesh(lateralGeometry, materialLinha);
     const lineLateralDir = new THREE.Mesh(lateralGeometry, materialLinha);
 
+  //Posicionamento
     plano.position.set(0, 0 , 0);
-
     lateralEsq.position.set(-150, 75, 0);
-
     lateralDir.position.set(150, 75, 0);
 
+  //Sombras
     plano.receiveShadow = true;
+   // linePlano.receiveShadow = true;
     lateralDir.receiveShadow = true;
+   // lineLateralDir.receiveShadow = true;
     lateralEsq.receiveShadow = true;
+   //s lineLateralDir.receiveShadow = true;
 
+  //Adicionando ao plano
     plano.add(linePlano);
     plano.add(lateralEsq);
     plano.add(lateralDir);
 
     lateralEsq.add(lineLateralEsq);
     lateralDir.add(lineLateralDir);
+    posicionaArvores(plano);
 
   return plano;
 } 
+
+function posicionaArvores(plano) {
+  var numArvores = 700;
+  do{
+    var arvore = new Arvore(plano);
+    numArvores = numArvores - 1;
+  }while(numArvores - 1 > 0);  
+}

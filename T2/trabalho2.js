@@ -1,7 +1,6 @@
   import * as THREE from 'three';
   import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
   import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-  import { Arvore } from "./Arvore.js";
   import { Plano } from "./Plano.js";
   import {
     initRenderer,
@@ -9,7 +8,7 @@
     onWindowResize,
     getMaxSize
   } from "../libs/util/util.js";
-  import { MeshLambertMaterial, MeshPhongMaterial } from '../build/three.module.js';
+  import { MeshLambertMaterial, MeshPhongMaterial, Object3D } from '../build/three.module.js';
 
   let scene, renderer, camera, orbit; // Initial variables
   let isPaused = false;
@@ -39,7 +38,7 @@
   // Variáveis para armazenar a posição do mouse
   const mouse = new THREE.Vector2();
   const raycaster = new THREE.Raycaster();
-  var planeGeometry = new THREE.PlaneGeometry(100, 98);
+  var planeGeometry = new THREE.PlaneGeometry(250, 150);
   var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
   var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
   raycastPlane.translateY(15);
@@ -51,10 +50,11 @@
   const ambientColor = "rgb(50,50,50)";
   let ambientLight = new THREE.AmbientLight(ambientColor);
   scene.add(ambientLight);
-  let lightPosition = new THREE.Vector3(10, 15, 0);
+  //let lightPosition = new THREE.Vector3(120, 400, 0);
   let lightColor = "rgb(255,255,255)";
   let dirLight = new THREE.DirectionalLight(lightColor);
-  setDirectionalLighting(lightPosition);
+  dirLight.castShadow = true;
+
 
   //definindo controles
   orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
@@ -99,38 +99,6 @@
   controls.add("* Right button to translate (pan)");
   controls.add("* Scroll to zoom in/out.");
   controls.show();
-
-
-  //--ARVORE--
-  const numArvores = 700;
-  //materiais das ávores
-  var materialTrunk = new THREE.MeshPhongMaterial({ color: 'brown'});
-  materialTrunk.transparent = true;
-  //material folha
-  var materialLeaves = new THREE.MeshPhongMaterial({ color: 'green'});
-  materialLeaves.transparent = true;
-
-  // create a tree
-  for (let i = 0; i < numArvores; i++) {
-    var arvore = new Arvore(materialLeaves, materialTrunk);
-    scene.add(arvore);
-    arvore.rotation.y = Math.PI / 2;
-    plano.plano1.add(arvore);
-  }
-
-  for (let i = 0; i < numArvores; i++) {
-    var arvore = new Arvore(materialLeaves, materialTrunk);
-    scene.add(arvore);
-    arvore.rotation.y = Math.PI / 2;
-    plano.plano2.add(arvore);
-  }
-  
-  for (let i = 0; i < numArvores; i++) {
-    var arvore = new Arvore(materialLeaves, materialTrunk);
-    scene.add(arvore);
-    arvore.rotation.y = Math.PI / 2;
-    plano.plano3.add(arvore);
-  }
 
   //Criando Torreta
   for (let i = 0; i < 3; i++) {
@@ -218,6 +186,7 @@
   scene.add(smallSquare);
   scene.add(largeSquare);
 
+  let position =  new THREE.Vector3();
   //Render
   render();
 
@@ -255,7 +224,12 @@
           movimentoAviao.position.add(directionAviao.multiplyScalar(aviaoFoco));
         }
         largeSquare.position.add(direction.multiplyScalar(largeSquareSpeed));
+
       }
+      position.z = - cameraHolder.position.z;
+      position.y = cameraHolder.position.y;
+      position.x = cameraHolder.position.x;
+        setDirectionalLighting(position);
     }
   }
 
@@ -358,17 +332,19 @@
     dirLight.position.copy(position);
 
     // Shadow settings
-    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.setX(500);
+    // (512, 512);
     dirLight.shadow.mapSize.width = 512;
     dirLight.shadow.mapSize.height = 512;
-    dirLight.shadow.camera.near = 1;
-    dirLight.shadow.camera.far = 30;
-    dirLight.shadow.camera.left = -15;
-    dirLight.shadow.camera.right = 15;
-    dirLight.shadow.camera.top = 15;
-    dirLight.shadow.camera.bottom = -15;
+    dirLight.shadow.camera.near = 70;
+    dirLight.shadow.camera.far = 5000;
+    dirLight.shadow.camera.left = -150;
+    dirLight.shadow.camera.right = 150;
+    dirLight.shadow.camera.top = 150;
+    dirLight.shadow.camera.bottom = -150;
     dirLight.name = "Direction Light";
 
+   
     scene.add(dirLight);
   }
 
