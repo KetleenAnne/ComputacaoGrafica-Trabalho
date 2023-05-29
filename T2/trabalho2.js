@@ -8,8 +8,6 @@
     onWindowResize,
     getMaxSize
   } from "../libs/util/util.js";
-  import { MeshLambertMaterial, MeshPhongMaterial, Object3D } from '../build/three.module.js';
-
   let scene, renderer, camera, orbit; // Initial variables
   let isPaused = false;
   let isCursorVisible = false;
@@ -50,11 +48,10 @@
   const ambientColor = "rgb(50,50,50)";
   let ambientLight = new THREE.AmbientLight(ambientColor);
   scene.add(ambientLight);
-  //let lightPosition = new THREE.Vector3(120, 400, 0);
+  let lightPosition = new THREE.Vector3(10, 15, 0);
   let lightColor = "rgb(255,255,255)";
   let dirLight = new THREE.DirectionalLight(lightColor);
-  dirLight.castShadow = true;
-
+  setDirectionalLighting(lightPosition);
 
   //definindo controles
   orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
@@ -99,6 +96,7 @@
   controls.add("* Right button to translate (pan)");
   controls.add("* Scroll to zoom in/out.");
   controls.show();
+
 
   //Criando Torreta
   for (let i = 0; i < 3; i++) {
@@ -186,7 +184,6 @@
   scene.add(smallSquare);
   scene.add(largeSquare);
 
-  let position =  new THREE.Vector3();
   //Render
   render();
 
@@ -224,12 +221,7 @@
           movimentoAviao.position.add(directionAviao.multiplyScalar(aviaoFoco));
         }
         largeSquare.position.add(direction.multiplyScalar(largeSquareSpeed));
-
       }
-      position.z = - cameraHolder.position.z;
-      position.y = cameraHolder.position.y;
-      position.x = cameraHolder.position.x;
-        setDirectionalLighting(position);
     }
   }
 
@@ -332,19 +324,17 @@
     dirLight.position.copy(position);
 
     // Shadow settings
-    dirLight.shadow.mapSize.setX(500);
-    // (512, 512);
+    dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 512;
     dirLight.shadow.mapSize.height = 512;
-    dirLight.shadow.camera.near = 70;
-    dirLight.shadow.camera.far = 5000;
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 300;
     dirLight.shadow.camera.left = -150;
     dirLight.shadow.camera.right = 150;
     dirLight.shadow.camera.top = 150;
     dirLight.shadow.camera.bottom = -150;
     dirLight.name = "Direction Light";
 
-   
     scene.add(dirLight);
   }
 
