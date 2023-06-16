@@ -37,6 +37,7 @@
   // Variáveis para armazenar a posição do mouse
   const mouse = new THREE.Vector2();
   const raycaster = new THREE.Raycaster();
+  raycaster.layers.enable(0);
   var planeGeometry = new THREE.PlaneGeometry(250, 150);
   var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
   var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -49,14 +50,12 @@
   const ambientColor = "rgb(50,50,50)";
   let ambientLight = new THREE.AmbientLight(ambientColor);
   scene.add(ambientLight);
-  let lightPosition = new THREE.Vector3(10, 15, 0);
+  let lightPosition = new THREE.Vector3(50, 15, 0);
   let lightColor = "rgb(255,255,255)";
   let dirLight = new THREE.DirectionalLight(lightColor);
   setDirectionalLighting(lightPosition);
 
-  //definindo controles
-  orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
-
+ 
   // Listen window size changes
   window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
   window.addEventListener('mousemove', onMouseMove, false);
@@ -328,10 +327,10 @@
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 512;
     dirLight.shadow.mapSize.height = 512;
-    dirLight.shadow.camera.near = 1;
-    dirLight.shadow.camera.far = 300;
-    dirLight.shadow.camera.left = -150;
-    dirLight.shadow.camera.right = 150;
+    dirLight.shadow.camera.near = 0.2;
+    dirLight.shadow.camera.far = 1500;
+    dirLight.shadow.camera.left = -150.0;
+    dirLight.shadow.camera.right = 150.0;
     dirLight.shadow.camera.top = 150;
     dirLight.shadow.camera.bottom = -150;
     dirLight.name = "Direction Light";
