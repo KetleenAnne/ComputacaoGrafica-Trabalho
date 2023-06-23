@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import * as THREE from 'three';
 import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
@@ -8,6 +9,18 @@ import {
   createLightSphere,
   getMaxSize
 } from "../libs/util/util.js";
+=======
+  import * as THREE from 'three';
+  import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
+  import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
+  import { Plano } from "./Plano.js";
+  import {
+    initRenderer,
+    InfoBox,
+    onWindowResize,
+    getMaxSize
+  } from "../libs/util/util.js";
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
 let scene, renderer, camera, orbit; // Initial variables
 
@@ -25,6 +38,19 @@ camera.position.copy(camPos);
 camera.up.copy(camUp);
 camera.lookAt(camLook);
 
+<<<<<<< HEAD
+=======
+  //Plano do Raycaster
+  // Variáveis para armazenar a posição do mouse
+  const mouse = new THREE.Vector2();
+  const raycaster = new THREE.Raycaster();
+  var planeGeometry = new THREE.PlaneGeometry(250, 150);
+  var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
+  var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+  raycastPlane.translateY(15);
+  raycastPlane.translateX(-2.8);
+  scene.add(raycastPlane);
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
 //Plano do Raycaster
 // Variáveis para armazenar a posição do mouse
@@ -107,6 +133,7 @@ for (let i = 0; i < 3; i++) {
   loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
 }
 
+<<<<<<< HEAD
 //Criando aviao
 var movimentoAviao = null;
 var destino =  new THREE.Vector3( 0.0, 0.0, 1.0);
@@ -200,6 +227,12 @@ function render() {
   
 }
 
+=======
+  //Criando Torreta
+  for (let i = 0; i < 3; i++) {
+    loadGLBFile('/T2/objeto/', 'gun_turrent', true, 7.0);
+  }
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
 function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
   var loader = new GLTFLoader();
@@ -211,6 +244,65 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
       if (child) {
         child.castShadow = true;
       }
+<<<<<<< HEAD
+=======
+    }
+  }
+
+
+
+  //ao clicar no mouse
+  function onRightClick(event) {
+    event.preventDefault();
+    //criando tiro
+    if (!isPaused) {
+      const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+      const sphereMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    }
+    else {
+      toggleSimulation();
+    }
+  }
+
+  function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
+    var loader = new GLTFLoader();
+    loader.load(modelPath + modelName + '.glb', function (gltf) {
+      obj = gltf.scene;
+      obj.name = modelName;
+      obj.visible = visibility;
+      obj.traverse(function (child) {
+        if (child) {
+          child.castShadow = true;
+        }
+      });
+      obj.traverse(function (node) {
+        if (node.material) node.material.side = THREE.DoubleSide;
+      });
+
+      var obj = normalizeAndRescale(obj, desiredScale);
+      var obj = fixPosition(obj);
+      if (obj.name == 'low-poly_airplane') {
+        obj.rotateY(3.13);
+        obj.position.copy(posicaoAviao);
+        obj.layers.set(1);
+        movimentoAviao = obj;
+      }
+      if (obj.name == 'gun_turrent') {
+       /* plano.plano1.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
+        plano.plano2.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));
+        plano.plano3.add(obj.position.set(THREE.MathUtils.randFloat(-250, 250), 3, THREE.MathUtils.randFloat(-150, 150)));*/ //aqui estas dando object 3d
+        obj.rotateY(1.57);
+        obj.layers.set(2);
+        obj.userData.collidable = true;
+        torreta = obj;
+      }
+      
+      obj.receiveShadow = true;
+      obj.castShadow = true;
+      assetManager[modelName] = obj;
+      scene.add(obj);
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
     });
     obj.traverse(function (node) {
       if (node.material) node.material.side = THREE.DoubleSide;
@@ -335,7 +427,21 @@ function onMouseMove(event) {
   // Atualizar a posição das miras com base na posição do mouse
   raycaster.setFromCamera(mouse, camera);
 
+<<<<<<< HEAD
   const intersects = raycaster.intersectObject(raycastPlane);
+=======
+    // Shadow settings
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 512;
+    dirLight.shadow.mapSize.height = 512;
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 300;
+    dirLight.shadow.camera.left = -150;
+    dirLight.shadow.camera.right = 150;
+    dirLight.shadow.camera.top = 150;
+    dirLight.shadow.camera.bottom = -150;
+    dirLight.name = "Direction Light";
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
   if (intersects.length > 0) {
       const intersection = intersects[0];
@@ -347,3 +453,15 @@ function onMouseMove(event) {
   }
 }
 
+<<<<<<< HEAD
+=======
+  // Função para obter a posição do mouse
+  function onMouseMove(event) {
+    // Atualizar a última posição do mouse
+    lastMousePosition.x = event.clientX;
+    lastMousePosition.y = event.clientY;
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  }
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812

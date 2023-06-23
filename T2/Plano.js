@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { Arvore } from "./Arvore.js";
+
 
 export class Plano {
   plano1;
@@ -54,16 +56,26 @@ export class Plano {
 }
 
 function createPlane(){
+  //material do plano
     const materialPlano = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
 
+<<<<<<< HEAD
     //largura do plano 100
     //tamanho do plano 100
     const planoGeometry = new THREE.BoxGeometry(20, 1, 20);
     const plano = new THREE.Mesh(planoGeometry, materialPlano);
 
     const lateralGeometry = new THREE.BoxGeometry(1, 50, 80);
+=======
+  // geometria plano e laterais
+    const planoGeometry = new THREE.BoxGeometry(300, 0, 500); //largura 300, comprimento 500
+    const lateralGeometry = new THREE.BoxGeometry(0, 150, 500);
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
+  //Mesh plano e laterais
+    const plano = new THREE.Mesh(planoGeometry, materialPlano);
     const lateralEsq = new THREE.Mesh(lateralGeometry, materialPlano);
+<<<<<<< HEAD
 
     const lateralDir = new THREE.Mesh(new THREE.BoxGeometry(1, 50, 80), materialPlano);
 
@@ -72,18 +84,47 @@ function createPlane(){
     lateralEsq.position.set(-40, 25, 0);
 
     lateralDir.position.set(40, 25, 0);
+=======
+    const lateralDir = new THREE.Mesh(lateralGeometry, materialPlano);
 
+  //Mesh linhas
+    const linePlano = new THREE.Mesh(planoGeometry, materialLinha);
+    const lineLateralEsq = new THREE.Mesh(lateralGeometry, materialLinha);
+    const lineLateralDir = new THREE.Mesh(lateralGeometry, materialLinha);
+
+  //Posicionamento
+    plano.position.set(0, 0 , 0);
+    lateralEsq.position.set(-150, 75, 0);
+    lateralDir.position.set(150, 75, 0);
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
+
+  //Sombras
     plano.receiveShadow = true;
+   // linePlano.receiveShadow = true;
     lateralDir.receiveShadow = true;
+   // lineLateralDir.receiveShadow = true;
     lateralEsq.receiveShadow = true;
+   //s lineLateralDir.receiveShadow = true;
 
+<<<<<<< HEAD
     plano.add(lateralEsq);
     plano.add(lateralDir);
 
+=======
+  //Adicionando ao plano
+    plano.add(linePlano);
+    plano.add(lateralEsq);
+    plano.add(lateralDir);
+
+    lateralEsq.add(lineLateralEsq);
+    lateralDir.add(lineLateralDir);
+    posicionaArvores(plano);
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
   return plano;
 } 
 
+<<<<<<< HEAD
 function CriarPlano(inicio, fim) {
   const linha0 = [];
   const linha1 = [];
@@ -100,4 +141,12 @@ function CriarPlano(inicio, fim) {
     
   }
   
+=======
+function posicionaArvores(plano) {
+  var numArvores = 700;
+  do{
+    var arvore = new Arvore(plano);
+    numArvores = numArvores - 1;
+  }while(numArvores - 1 > 0);  
+>>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 }
