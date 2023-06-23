@@ -9,9 +9,9 @@ export class Plano {
     this.plano2 = createPlane();
     this.plano3 = createPlane();
 
-    this.plano1.position.set(0, 0, 0);
-    this.plano2.position.set(0, 0, -500);
-    this.plano3.position.set(0, 0, -1000);
+    this.plano1.position.set(-100, -1, 100);
+    this.plano2.position.set(0, 0, -80);
+    this.plano3.position.set(0, 0, -160);
 
     scena.add(this.plano1);
     scena.add(this.plano2);
@@ -55,38 +55,49 @@ export class Plano {
 
 function createPlane(){
     const materialPlano = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-    const materialLinha = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }); 
 
-    //largura do plano 300
-    //tamanho do plano 500
-    const planoGeometry = new THREE.BoxGeometry(300, 0, 500);
+    //largura do plano 100
+    //tamanho do plano 100
+    const planoGeometry = new THREE.BoxGeometry(20, 1, 20);
     const plano = new THREE.Mesh(planoGeometry, materialPlano);
-    const linePlano = new THREE.Mesh(planoGeometry, materialLinha);
 
-    const lateralGeometry = new THREE.BoxGeometry(0, 150, 500);
+    const lateralGeometry = new THREE.BoxGeometry(1, 50, 80);
 
     const lateralEsq = new THREE.Mesh(lateralGeometry, materialPlano);
-    const lineLateralEsq = new THREE.Mesh(lateralGeometry, materialLinha);
 
-    const lateralDir = new THREE.Mesh(new THREE.BoxGeometry(0, 150, 500), materialPlano);
-    const lineLateralDir = new THREE.Mesh(lateralGeometry, materialLinha);
+    const lateralDir = new THREE.Mesh(new THREE.BoxGeometry(1, 50, 80), materialPlano);
 
-    plano.position.set(0, 0 , 0);
+    plano.position.set(1, 1 , 100);
 
-    lateralEsq.position.set(-150, 75, 0);
+    lateralEsq.position.set(-40, 25, 0);
 
-    lateralDir.position.set(150, 75, 0);
+    lateralDir.position.set(40, 25, 0);
 
     plano.receiveShadow = true;
     lateralDir.receiveShadow = true;
     lateralEsq.receiveShadow = true;
 
-    plano.add(linePlano);
     plano.add(lateralEsq);
     plano.add(lateralDir);
 
-    lateralEsq.add(lineLateralEsq);
-    lateralDir.add(lineLateralDir);
 
   return plano;
 } 
+
+function CriarPlano(inicio, fim) {
+  const linha0 = [];
+  const linha1 = [];
+  const linha2 = [];
+  const linha3 = [];
+  const linha4 = [];
+  const coluna = [[linha0],
+                  [linha1],
+                  [linha2],
+                  [linha3],
+                  [linha4]]
+  for (let i = 0; i < 5; i++) {
+    let posicaoX = inicio+i*50;
+    
+  }
+  
+}

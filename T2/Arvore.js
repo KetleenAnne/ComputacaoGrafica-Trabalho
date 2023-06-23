@@ -19,7 +19,7 @@ export class Arvore extends THREE.Group{
         var leaves3Mesh = new THREE.Mesh(leaves3, materialfolha);//mesh da 3 camada
 
         // position the trunk. Set y to half of height of trunk
-        trunkMesh.position.set(THREE.MathUtils.randFloat(-250, 250), 1.5 , THREE.MathUtils.randFloat(-150, 150));//posição do tronco
+        trunkMesh.position.set(THREE.MathUtils.randFloat(-40, 40), 1.5 , THREE.MathUtils.randFloat(-40, 40));//posição do tronco
         leavesMesh.position.set(0, 4, 0);//posição em relação ao tronco da 1 camada
         leaves2Mesh.position.set(0, 3, 0);//posição em relação ao tronco da 2 camada
         leaves3Mesh.position.set(0, 2, 0);//posição em relação ao tronco da 3 camada
@@ -27,11 +27,8 @@ export class Arvore extends THREE.Group{
         trunkMesh.castShadow = true;//sombra do tronco
         trunkMesh.receiveShadow = true;
         leavesMesh.castShadow = true;//sombra da 1 camada
-        leavesMesh.receiveShadow = true;
         leaves2Mesh.castShadow = true;//sombra da 2 camada
-        leaves2Mesh.receiveShadow = true;
         leaves3Mesh.castShadow = true;//sombra da 3 camada
-        leaves3Mesh.receiveShadow = true;
 
         trunkMesh.add(leavesMesh);//adiciona no tronco a 1 camada
         trunkMesh.add(leaves2Mesh);//adiciona a segunda camada ao tronco
