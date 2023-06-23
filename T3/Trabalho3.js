@@ -56,7 +56,7 @@ let assetManager = {
     // Properties ---------------------------------
     aviao: null,
     torreta: null,
-    hbAviao: null,
+    hbAviao: new THREE.Box3(),
     hbTorreta: null,
     allLoaded: false,
 
@@ -65,7 +65,6 @@ let assetManager = {
         if (!this.allLoaded) {
             if (this.aviao && this.torreta) {
                 this.allLoaded = true;
-                loadingMessage.hide();
             }
         }
     },
@@ -113,29 +112,6 @@ const smallSquareGeometry = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
     new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0) // Fechar o loop
 ]);
-const largeSquareGeometry = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
-    new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
-    new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
-    new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
-    new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0) // Fechar o loop
-]);
-const linhaExterna1 = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
-    new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0)
-]);
-const linhaExterna2 = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
-    new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0)
-]);
-const linhaExterna3 = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
-    new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0)
-]);
-const linhaExterna4 = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
-    new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0)
-]);
 const linhaInterna1 = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
     new THREE.Vector3(-tamanhoPequeno / 2, tamanhoPequeno / 2, 0)
@@ -154,47 +130,39 @@ const linhaInterna4 = new THREE.BufferGeometry().setFromPoints([
 ]);
 
 const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-const linhavertice1 = new THREE.Line(linhaExterna1, material);
-const linhavertice2 = new THREE.Line(linhaExterna2, material);
-const linhavertice3 = new THREE.Line(linhaExterna3, material);
-const linhavertice4 = new THREE.Line(linhaExterna4, material);
+
 const linhaverticeinterno1 = new THREE.Line(linhaInterna1, material);
 const linhaverticeinterno2 = new THREE.Line(linhaInterna2, material);
 const linhaverticeinterno3 = new THREE.Line(linhaInterna3, material);
 const linhaverticeinterno4 = new THREE.Line(linhaInterna4, material);
 const smallSquare = new THREE.Line(smallSquareGeometry, material);
-const largeSquare = new THREE.Line(largeSquareGeometry, material);
-largeSquare.add(linhavertice1);
-largeSquare.add(linhavertice2);
-largeSquare.add(linhavertice3);
-largeSquare.add(linhavertice4);
+
 smallSquare.add(linhaverticeinterno1);
 smallSquare.add(linhaverticeinterno2);
 smallSquare.add(linhaverticeinterno3);
 smallSquare.add(linhaverticeinterno4);
 smallSquare.position.set(0, 30, 0);
-largeSquare.position.set(0, 30, 0);
 smallSquare.name = 'smallSquare';
 smallSquare.move = true;
-largeSquare.name = 'largeSquare';
 scene.add(smallSquare);
-scene.add(largeSquare);
+
+var lerpConfig = {
+    destination: new THREE.Vector3(0.0, 0.2, 0.0),
+    alpha: 0.05,
+    move: true
+  }
 
 //Plano
 var ground = new THREE.TextureLoader().load("./Textures/death-star-texture ground.jpg");
 
-const materialcubo = new THREE.MeshLambertMaterial({ color: 'white', 
-side: THREE.DoubleSide,
-map: ground });
+const materialcubo = new THREE.MeshLambertMaterial({
+    color: 'white',
+    side: THREE.DoubleSide,
+    map: ground
+});
 const cuboGeometry = new THREE.BoxGeometry(20, 20, 20);
 const cubo = new THREE.Mesh(cuboGeometry, materialcubo);
 cubo.receiveShadow = true;
-
-//arvores
-const arvoreMesh = new Arvore(
-    new THREE.MeshLambertMaterial({ color: 'green' }),
-    new THREE.MeshLambertMaterial({ color: 'brown' })
-);
 
 //movimento do mouse
 function onMouseMove(event) {
@@ -207,7 +175,8 @@ function onMouseMove(event) {
 
     if (intersects.length > 0) {
         let point = intersects[0].point;
-        smallSquare.position.set(point.x, point.y);
+        smallSquare.position.set(point.x,point.y);
+        lerpConfig.destination.set(point.x,point.y);
     }
 };
 
@@ -307,16 +276,7 @@ function render() {
     requestAnimationFrame(render);
     if (!isPaused) {
         assetManager.checkLoaded();
-        if (assetManager.aviao != null) {
-            assetManager.aviao.position.z -= (velocidade*1);
-        }
-        smallSquare.position.lerp(intersect[0].point, 0.000001);
-        plano.position.z -= velocidade;
-        cameraHolder.position.z -= velocidade;
-        targetLuz.position.z -= velocidade;
-        dirLight.position.z -= velocidade;
-        smallSquare.position.z -= (velocidade*1);
-        largeSquare.position.z -= (velocidade*1);
+        updateAsset();
         renderer.render(scene, camera) // Render scene
     }
 }
@@ -395,23 +355,20 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.rotateY(3.13);
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
-            assetManager[hbAviao] = new THREE.Box3().setFromObject(obj);
-            aviaoHelper = createBBHelper(hbAviao, 'white')
+            assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
+            var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
         }
         if (obj.name == 'torreta') {
             obj.rotateY(1.57);
             obj.userData.collidable = true;
             obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-45, 45))
-            assetManager[hbTorreta] = new THREE.Box3().setFromObject(obj);
-            torretaHelper = createBBHelper(hbTorreta, 'white')
+            assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
+            var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
         }
 
         obj.receiveShadow = true;
         obj.castShadow = true;
         assetManager[modelName] = obj;
-        if (assetManager[modelName] != null) {
-            console.log(assetManager[modelName])
-        }
         scene.add(obj);
     });
 }
@@ -469,18 +426,30 @@ function onRightClick(event) {
     }
 }
 
-function createBBHelper(bb, color)
-{
-   // Create a bounding box helper
-   let helper = new THREE.Box3Helper( bb, color );
-   scene.add( helper );
-   return helper;
+function createBBHelper(bb, color) {
+    // Create a bounding box helper
+    let helper = new THREE.Box3Helper(bb, color);
+    scene.add(helper);
 }
 
-function checkCollisions(object)
-{
-   let collision = asset.bb.intersectsBox(object);
-   if(collision) {
+function checkCollisions(object) {
+    let collision = asset.bb.intersectsBox(object);
+    if (collision) {
         scene.remove(object);
-   };
+    };
+}
+function updateAsset()
+{
+   if(assetManager.allLoaded)
+   {
+        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+        assetManager.aviao.position.z -= velocidade;
+        console.log(velocidade);
+        assetManager.hbAviao.setFromObject(assetManager.aviao);
+        plano.position.z -= velocidade;
+        cameraHolder.position.z -= velocidade;
+        targetLuz.position.z -= velocidade;
+        dirLight.position.z -= velocidade;
+        smallSquare.position.z -= (velocidade * 1);
+   }
 }
