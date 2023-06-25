@@ -17,11 +17,15 @@ let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
 let isCursorVisible = false;
 var lerpConfig;
+let isShooting = false;
+var bullets = [];
+let bulletHB = new THREE.Box3();
+let shootingDirection = new THREE.Vector3();
 document.body.style.cursor = 'none';
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
 //camera
-let camPos = new THREE.Vector3(0.0, 30.0, 73.0);
+let camPos = new THREE.Vector3(0.0, 30.0, 60.0);
 let camUp = new THREE.Vector3(0.0, 0.0, 0.0);
 
 camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -78,7 +82,7 @@ let assetManager = {
 const ambientColor = "rgb(50,50,50)";
 let ambientLight = new THREE.AmbientLight(ambientColor);
 scene.add(ambientLight);
-let lightPosition = new THREE.Vector3(50, 70, 0);
+let lightPosition = new THREE.Vector3(70, 90, 0);
 let lightColor = "rgb(255,255,255)";
 let dirLight = new THREE.DirectionalLight(lightColor);
 
@@ -90,21 +94,20 @@ scene.add(targetLuz);
 dirLight.target = targetLuz;
 setDirectionalLighting(lightPosition);
 // Sphere to represent the light
-let lightSphere = createLightSphere(scene, 0.5, 10, 10, lightPosition);
+//let lightSphere = createLightSphere(scene, 0.5, 10, 10, lightPosition);
 // Create helper for the spotlight
 const spotHelper = new THREE.SpotLightHelper(dirLight, 0xFF8C00);
 //scene.add(spotHelper);
 
 // Create helper for the dirLight shadow
 const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
-scene.add(shadowHelper);
+//scene.add(shadowHelper);
 
 //Criando aviao
 loadGLBFile('./objeto/', 'aviao', true, 13.0);
 
 //cria Mira
 const tamanhoPequeno = 1.5;
-const tamanhoGrande = tamanhoPequeno * 2;
 const smallSquareGeometry = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
     new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
@@ -175,7 +178,7 @@ function onMouseMove(event) {
 
     if (intersects.length > 0) {
         let point = intersects[0].point;
-        smallSquare.position.set(point.x,point.y);
+        smallSquare.position.set(point.x,point.y,-50);
         lerpConfig.destination.set(point.x,point.y);
     }
 };
@@ -278,20 +281,23 @@ function render() {
         assetManager.checkLoaded();
         updateAsset();
         renderer.render(scene, camera) // Render scene
+        if (projeteis.length > 0) {
+            atualizarProjetil();
+        }
     }
 }
 
 //funçoes
 function CriarPlano(scene, tamanhoPlano) {
     const planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano - 50),
+        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano),
         new THREE.MeshLambertMaterial({
             side: THREE.DoubleSide,
             visible: false
         })
     );
     //planeMesh.rotateX(-Math.PI / 2);
-    planeMesh.position.set(0, 25, -100);
+    planeMesh.position.set(0, 60, -100);
     scene.add(planeMesh);
 
     return planeMesh;
@@ -356,14 +362,14 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
-            var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
+            //var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
         }
         if (obj.name == 'torreta') {
             obj.rotateY(1.57);
             obj.userData.collidable = true;
             obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-45, 45))
             assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
-            var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
+            //var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
         }
 
         obj.receiveShadow = true;
@@ -415,13 +421,23 @@ function onKeyPress(event) {
 
 function onRightClick(event) {
     event.preventDefault();
-    //criando tiro
     if (!isPaused) {
-        const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
-        const sphereMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
-        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    }
-    else {
+        if (!isShooting) {
+            isShooting = true;
+
+            // Obter a posição do clique do mouse em coordenadas do mundo
+            const mousePosition = new THREE.Vector2(
+                (event.clientX / window.innerWidth) * 2 - 1,
+                -(event.clientY / window.innerHeight) * 2 + 1
+            );
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mousePosition, camera);
+            shootingDirection.copy(raycaster.ray.direction);
+
+            // Disparar o tiro na direção do mouse
+            tiro = atirarProjetil();
+        }
+    } else {
         toggleSimulation();
     }
 }
@@ -429,27 +445,91 @@ function onRightClick(event) {
 function createBBHelper(bb, color) {
     // Create a bounding box helper
     let helper = new THREE.Box3Helper(bb, color);
-    scene.add(helper);
+    //scene.add(helper);
 }
 
-function checkCollisions(object) {
-    let collision = asset.bb.intersectsBox(object);
-    if (collision) {
-        scene.remove(object);
-    };
-}
+
 function updateAsset()
 {
    if(assetManager.allLoaded)
    {
         assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+        if(assetManager.aviao.position.y > 50){
+            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha/2);
+        }
         assetManager.aviao.position.z -= velocidade;
-        console.log(velocidade);
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         cameraHolder.position.z -= velocidade;
         targetLuz.position.z -= velocidade;
         dirLight.position.z -= velocidade;
-        smallSquare.position.z -= (velocidade * 1);
+        smallSquare.position.z -= velocidade;
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const bullet = bullets[i];
+            bullet.position.add(bullet.velocity);
+            bulletHB = new THREE.Box3().setFromObject(bullet);
+            
+            // Verificar colisões dos tiros com objetos ou limites do cenário e remover os tiros colididos
+            if (checkCollisions(bullet,assetManager.torreta) || bullet.position.y < 0) {
+                bullets.splice(i, 1);
+                scene.remove(bullet);
+            }
+        }
    }
 }
+
+function criarProjetil() {
+    let balaGeometry = new THREE.BoxGeometry(5.0, 5.0, 5.0);
+    const materialProjetil = setDefaultMaterial("rgb(255,0,0)");
+    let bala = new THREE.Mesh(balaGeometry,materialProjetil);
+    let obj1 = new THREE.Vector3(
+      smallSquare.position.x,
+      smallSquare.position.y,
+      smallSquare.position.z
+    );
+    let obj2 = new THREE.Vector3(
+      assetManager.aviao.position.x,
+      assetManager.aviao.position.y,
+      assetManager.aviao.position.z
+    );
+    let direction = new THREE.Vector3();
+    direction.subVectors(obj2, obj1).normalize();
+    let quaternion = new THREE.Quaternion();
+    quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction);
+    bala.setRotationFromQuaternion(quaternion);
+  
+    bala.scale.set(1, 1, 5);
+    scene.add(bala);
+    bala.position.copy(assetManager.aviao.position);
+    bala.position.y += 10;
+    //let bbbala = new THREE.Box3().setFromObject(bala);
+    //scene.add(bbbala);
+  
+    return bala;
+}
+function checkCollisions(bala, torreta) {
+    let collision = torreta.intersectsBox(bala);
+    if (collision) {
+     torreta.traverse(function (node) {
+        if (node.material) {
+          node.material.opacity = 0;
+        }
+      });
+    }
+}
+
+function atirarProjetil() {
+    const projetil = criarProjetil();
+  
+    projeteis.push(projetil);
+  
+    // for (let i = 0; i < projeteis.length; i++)
+    //   projeteis[i].translateZ(-8 * velocidade);
+}
+  
+function atualizarProjetil() {
+    for (let i = 0; i < projeteis.length; i++){
+      projeteis[i].translateZ(-8 * velocidade);
+    }
+}
+
