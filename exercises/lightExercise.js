@@ -96,13 +96,7 @@ function createTeapot(x, y, z, color) {
   obj.position.set(x, y, z);
   scene.add(obj);
 }
-function updateLight() {
-  spotLight.target.updateMatrixWorld();
-  lightSphere.position.copy(spotLight.position);
-  spotLight.shadow.camera.updateProjectionMatrix();     
-  spotHelper.update();
-  shadowHelper.update();    
-}
+
 
 function makeXYZGUI(gui, vector3, name, onChangeFn) {
   const folder = gui.addFolder(name);

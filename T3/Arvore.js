@@ -1,16 +1,8 @@
 import * as THREE from 'three';
 
-export class Arvore extends THREE.Object3D {  
-    constructor(plano) {
+export class Arvore extends THREE.Group{
+    constructor(materialfolha, materialtronco) {
         super();
-        // create material
-        var materialTrunk = new THREE.MeshPhongMaterial({ color: 'brown'});
-       // materialTrunk.transparent = true;
-        //material folha
-        var materialLeaves = new THREE.MeshPhongMaterial({ color: 'green'});
-       // materialLeaves.transparent = true;
-
-
         // create a tree
         var trunk = new THREE.CylinderGeometry(0.6, 0.6, 3);//medidas do tronco
         var leaves = new THREE.ConeGeometry(1.5, 1.5);//medida das camadas da arvore
@@ -18,40 +10,35 @@ export class Arvore extends THREE.Object3D {
         var leaves3 = new THREE.ConeGeometry(2.5, 2.5);//medida das camadas da arvore
 
         // create the mesh
-        var trunkMesh = new THREE.Mesh(trunk, materialTrunk);//mesh do tronco
+        var trunkMesh = new THREE.Mesh(trunk, materialtronco);//mesh do tronco
 
-        var leavesMesh = new THREE.Mesh(leaves, materialLeaves);//mesh da 1 camada
+        var leavesMesh = new THREE.Mesh(leaves, materialfolha);//mesh da 1 camada
 
-        var leaves2Mesh = new THREE.Mesh(leaves2, materialLeaves);//mesh da 2 camada
+        var leaves2Mesh = new THREE.Mesh(leaves2, materialfolha);//mesh da 2 camada
 
-        var leaves3Mesh = new THREE.Mesh(leaves3, materialLeaves);//mesh da 3 camada
+        var leaves3Mesh = new THREE.Mesh(leaves3, materialfolha);//mesh da 3 camada
 
         // position the trunk. Set y to half of height of trunk
-<<<<<<< HEAD
-        trunkMesh.position.set(THREE.MathUtils.randFloat(-40, 40), 1.5 , THREE.MathUtils.randFloat(-40, 40));//posição do tronco
-=======
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
+        trunkMesh.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5 , THREE.MathUtils.randFloat(-45, 45));//posição do tronco
         leavesMesh.position.set(0, 4, 0);//posição em relação ao tronco da 1 camada
         leaves2Mesh.position.set(0, 3, 0);//posição em relação ao tronco da 2 camada
         leaves3Mesh.position.set(0, 2, 0);//posição em relação ao tronco da 3 camada
 
-
+        trunkMesh.castShadow = true;//sombra do tronco
         trunkMesh.receiveShadow = true;
-        trunkMesh.castShadow = true;
         leavesMesh.castShadow = true;//sombra da 1 camada
+        leavesMesh.receiveShadow = true;//sombra da 1 camada
         leaves2Mesh.castShadow = true;//sombra da 2 camada
+        leaves2Mesh.receiveShadow = true;//sombra da 2 camada
         leaves3Mesh.castShadow = true;//sombra da 3 camada
+        leaves3Mesh.receiveShadow = true;//sombra da 3 camada
 
         trunkMesh.add(leavesMesh);//adiciona no tronco a 1 camada
         trunkMesh.add(leaves2Mesh);//adiciona a segunda camada ao tronco
         trunkMesh.add(leaves3Mesh);//adiciona a terceira camada ao tronco
 
-        trunkMesh.rotation.y = Math.PI / 2;
-        
         this.add(trunkMesh);
-        this.position.set(THREE.MathUtils.randInt(-150, 150), 1.5 , THREE.MathUtils.randInt(-250, 250));
-
-        plano.add(this);
+        return trunkMesh;
     }
 
 }

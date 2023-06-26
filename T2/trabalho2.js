@@ -9,20 +9,16 @@
     getMaxSize
   } from "../libs/util/util.js";
 
-  let scene, renderer, camera, orbit; // Initial variables
-  let isPaused = false;
-  let isCursorVisible = false;
-  document.body.style.cursor = 'none';
-  let torreta;
-  var lastMousePosition = new THREE.Vector2(); // Última posição do mouse
-  scene = new THREE.Scene();    // Create main scene
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-  //Main Camera
+let scene, renderer, camera, orbit; // Initial variables
 
-  let camPos = new THREE.Vector3(0.0, 30.0, 70.0);
-  let camUp = new THREE.Vector3(0.0, 1.0, 0.0);
+scene = new THREE.Scene();    // Create main scene
+renderer = initRenderer();    // Init a basic renderer
+  renderer.domElement.style.cursor = 'none';
+//Main Camera
+
+let camPos = new THREE.Vector3(0.0, 30.0, 70.0);
+let camUp = new THREE.Vector3(0.0, 1.0, 0.0);
+let camLook = new THREE.Vector3(0.0, 0.0, 0.0);
 
   camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.copy(camPos);
@@ -45,58 +41,76 @@
   raycastPlane.translateX(-2.8);
   scene.add(raycastPlane);
 
-  //Luz
+//Plano do Raycaster
+// Variáveis para armazenar a posição do mouse
+const mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+var planeGeometry = new THREE.PlaneGeometry(50, 48);
+var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
+var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+raycastPlane.translateY(24);
+raycastPlane.translateX(-2.8);
+scene.add(raycastPlane);
+
+//Luz
 
   const ambientColor = "rgb(50,50,50)";
   let ambientLight = new THREE.AmbientLight(ambientColor);
   scene.add(ambientLight);
-  let lightPosition = new THREE.Vector3(50, 15, 0);
+  let lightPosition = new THREE.Vector3(10, 15, 0);
   let lightColor = "rgb(255,255,255)";
   let dirLight = new THREE.DirectionalLight(lightColor);
   setDirectionalLighting(lightPosition);
 
- 
-  // Listen window size changes
-  window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
-  window.addEventListener('mousemove', onMouseMove, false);
-  window.addEventListener('contextmenu', onRightClick, false);
-  window.addEventListener('keydown', onKeyPress, false);
-  // Assets manager --------------------------------
-  let assetManager = {
-    // Properties ---------------------------------
-    aviao: null,
-    turreta: null,
-    allLoaded: false,
+//definindo controles
+orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 
-    // Functions ----------------------------------
-    checkLoaded: function () {
-      if (!this.allLoaded) {
-        if (this.aviao && this.turreta) {
-          this.allLoaded = true;
-          loadingMessage.hide();
-        }
+// Listen window size changes
+window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
+window.addEventListener('mousemove', onMouseMove, false);
+// Assets manager --------------------------------
+let assetManager = {
+  // Properties ---------------------------------
+  aviao: null,
+  allLoaded: false,
+
+  // Functions ----------------------------------
+  checkLoaded: function () {
+    if (!this.allLoaded) {
+      if (this.aviao) {
+        this.allLoaded = true;
+        loadingMessage.hide();
       }
-    },
-
-    hideAll: function () {
-      this.aviao.visible = this.turreta = false;
     }
+  },
+
+  hideAll: function () {
+    this.aviao.visible = this.turreta = false;
   }
-  // Show axes (parameter is size of each axis)
-  let axesHelper = new THREE.AxesHelper(30);
-  scene.add(axesHelper);
+}
+// Show axes (parameter is size of each axis)
+let axesHelper = new THREE.AxesHelper(30);
+scene.add(axesHelper);
 
+// create the ground plane
+createCubePlane();
+createCubePlaneLateral();
+createCubePlaneLateralEsq();
 
-  // Use this to show information onscreen
-  let controls = new InfoBox();
-  controls.add("Basic Scene");
-  controls.addParagraph();
-  controls.add("Use mouse to interact:");
-  controls.add("* Left button to rotate");
-  controls.add("* Right button to translate (pan)");
-  controls.add("* Scroll to zoom in/out.");
-  controls.show();
+// Use this to show information onscreen
+let controls = new InfoBox();
+controls.add("Basic Scene");
+controls.addParagraph();
+controls.add("Use mouse to interact:");
+controls.add("* Left button to rotate");
+controls.add("* Right button to translate (pan)");
+controls.add("* Scroll to zoom in/out.");
+controls.show();
 
+//Criando Torreta
+for (let i = 0; i < 3; i++) {
+  loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
+}
 
   //Criando Torreta
   for (let i = 0; i < 3; i++) {
@@ -279,49 +293,50 @@
       assetManager[modelName] = obj;
       scene.add(obj);
     });
-  }
-  function toggleSimulation() {
-    isPaused = !isPaused;
-    isCursorVisible = !isCursorVisible;
-    document.body.style.cursor = isCursorVisible ? 'auto' : 'none';
-  }
+    obj.traverse(function (node) {
+      if (node.material) node.material.side = THREE.DoubleSide;
+    });
 
-  function onKeyPress(event) {
-    if (event.code === 'Escape') {
-      toggleSimulation();
+    var obj = normalizeAndRescale(obj, desiredScale);
+    var obj = fixPosition(obj);
+    if (obj.name == 'low-poly_airplane') {
+      obj.rotateY(3.13);
+      obj.position.copy(posicaoAviao);
+      obj.layers.set(1);
+      movimentoAviao = obj;
     }
-    if (event.code === 'Digit1') {
-      aviaoSpeed = 0.1;
+    if (obj.name == 'gun_turrent') {
+      obj.position.set(THREE.MathUtils.randFloat(-15, 15),1,THREE.MathUtils.randFloat(-15,15));
+      obj.layers.set(2);
     }
-    if (event.code === 'Digit2') {
-      aviaoSpeed = 0.5;
-    }
-    if (event.code === 'Digit3') {
-      aviaoSpeed = 1;
-    }
-  }
+    
+    obj.receiveShadow = true;
+    obj.castShadow = true;
+    scene.add(obj);
+    assetManager[modelName] = obj;
+  });
+}
 
+function normalizeAndRescale(obj, newScale) {
+  var scale = getMaxSize(obj);
+  obj.scale.set(newScale * (1.0 / scale),
+    newScale * (1.0 / scale),
+    newScale * (1.0 / scale));
+  return obj;
+}
 
-  function normalizeAndRescale(obj, newScale) {
-    var scale = getMaxSize(obj);
-    obj.scale.set(newScale * (1.0 / scale),
-      newScale * (1.0 / scale),
-      newScale * (1.0 / scale));
-    return obj;
-  }
+function fixPosition(obj) {
+  // Fix position of the object over the ground plane
+  var box = new THREE.Box3().setFromObject(obj);
+  if (box.min.y > 0)
+    obj.translateY(-box.min.y);
+  else
+    obj.translateY(-1 * box.min.y);
+  return obj;
+}
 
-  function fixPosition(obj) {
-    // Fix position of the object over the ground plane
-    var box = new THREE.Box3().setFromObject(obj);
-    if (box.min.y > 0)
-      obj.translateY(-box.min.y);
-    else
-      obj.translateY(-1 * box.min.y);
-    return obj;
-  }
-
-  function setDirectionalLighting(position) {
-    dirLight.position.copy(position);
+function setDirectionalLighting(position) {
+  dirLight.position.copy(position);
 
     // Shadow settings
     dirLight.castShadow = true;
@@ -335,8 +350,15 @@
     dirLight.shadow.camera.bottom = -150;
     dirLight.name = "Direction Light";
 
-    scene.add(dirLight);
+  if (intersects.length > 0) {
+      const intersection = intersects[0];
+      smallSquare.position.copy(intersection.point);
+      const largeSquareSpeed = 1;
+      const direction = intersection.point.clone().sub(largeSquare.position).normalize();
+
+      largeSquare.position.add(direction.multiplyScalar(largeSquareSpeed));
   }
+}
 
   // Função para obter a posição do mouse
   function onMouseMove(event) {
