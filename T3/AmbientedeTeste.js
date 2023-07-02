@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MathUtils } from 'three';
+import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
 import { IcosahedronBufferGeometry, Vector3 } from '../build/three.module.js';
 import {
@@ -13,14 +13,58 @@ import {
 } from "../libs/util/util.js";
 import { Arvore } from './Arvore.js';
 
-let scene, renderer, camera; // Initial variables
+let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
+let playMusic = true;
 let isCursorVisible = false;
 var lerpConfig;
 let isShooting = false;
-var bullets = [];
-let bulletHB = new THREE.Box3();
-let shootingDirection = new THREE.Vector3();
+let tiros = [];
+let tirosHB = [];
+let tirosHBHelper = [];
+//explosao
+let explosion = {
+    textures: [],
+    numTextures: 20,
+    show: false,
+    texPlane: null,
+    texIndex: 0,
+    frameDrop: 2,
+
+    play: function () {
+        this.show = true;
+    },
+    build: function () {
+        // Create texture plane
+        this.texPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.0, 2.0, 20, 20),
+            new THREE.MeshLambertMaterial({ color: "rgb(255,255,255)", side: THREE.DoubleSide, alphaTest: 0.5 }));
+        scene.add(this.texPlane);
+
+        // Load Textures
+        var textureLoader = new THREE.TextureLoader();
+        for (let i = 1; i <= this.numTextures; i++) {
+            this.textures.push(textureLoader.load("../assets/textures/explosion/" + i + ".png"));
+        }
+    },
+    animate: function () {
+        if (this.show) {
+            this.texPlane.visible = true;
+            let index = this.texIndex / this.frameDrop;
+            let skip = this.texIndex % this.frameDrop;
+            if (!skip)
+                this.texPlane.material.map = this.textures[index];
+            this.texIndex++;
+
+            // Hide plane after passing by all textures
+            if (index > this.numTextures) {
+                this.texPlane.visible = false;
+                this.texIndex = 0;
+                this.show = false;
+            }
+        }
+    },
+}
 document.body.style.cursor = 'none';
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
@@ -35,7 +79,7 @@ let cameraHolder = new THREE.Object3D();
 cameraHolder.add(camera);
 scene.add(cameraHolder);
 
-
+orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 const tamanhoPlano = 100;
 //posiçao aviao
 const posicaoAviao = new Vector3(0.0, 10.0, 0.0);
@@ -106,6 +150,7 @@ const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
 //Criando aviao
 loadGLBFile('./objeto/', 'aviao', true, 13.0);
 
+
 //cria Mira
 const tamanhoPequeno = 1.5;
 const smallSquareGeometry = new THREE.BufferGeometry().setFromPoints([
@@ -153,7 +198,13 @@ var lerpConfig = {
     destination: new THREE.Vector3(0.0, 0.2, 0.0),
     alpha: 0.05,
     move: true
-  }
+}
+
+var lerpConfigTiro = {
+    destination: new THREE.Vector3(0.0, 0.2, 0.0),
+    alpha: 0.5,
+    move: true
+}
 
 //Plano
 var ground = new THREE.TextureLoader().load("./Textures/death-star-texture ground.jpg");
@@ -184,84 +235,18 @@ function onMouseMove(event) {
 };
 
 const objects = [];
+CriarTrincheiras(5);
 
-window.addEventListener('mousedown', function () {
-    const objectExist = objects.find(function (object) {
-        return (object.position.x === assetManager.aviao.position.x) &&
-            (object.position.z === assetManager.aviao.position.z)
-    });
-    if (!objectExist) {
-        intersects.forEach(function (intersect) {
-            var cuboClone;
-            var cuboCloneLateral;
-            for (let k = 0; k < 5; k++) {
-                if (k == 0) {
-                    //centro
-                    for (let j = 0; j < 5; j++) {
-                        for (let i = 0; i < 5; i++) {
-                            cuboClone = cubo.clone();
-                            cuboClone.position.set(-inicio + (i * 20), -10, fim - (j * 20));
-                            scene.add(cuboClone);
-                            objects.push(cuboClone);
-                        }
-                        if (j % 2 == 0) {
-                            loadGLBFile('./objeto/', 'torreta', true, 5);
-                        }
-                    }
-                    //lateral esquerda
-                    for (let l = 0; l < 5; l++) {
-                        for (let m = 0; m < 3; m++) {
-                            cuboCloneLateral = cubo.clone();
-                            cuboCloneLateral.position.set(-60, -10 + (m * 20), fim - (l * 20));
-                            scene.add(cuboCloneLateral);
-                            objects.push(cuboCloneLateral);
-                        }
-                    }
-                    //lateral direita
-                    for (let n = 0; n < 5; n++) {
-                        for (let o = 0; o < 3; o++) {
-                            cuboCloneLateral = cubo.clone();
-                            cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
-                            scene.add(cuboCloneLateral);
-                            objects.push(cuboCloneLateral);
-                        }
-                    }
-                }
-                else {
-                    //centro
-                    for (let j = 0; j < 5; j++) {
-                        for (let i = 0; i < 5; i++) {
-                            cuboClone = cubo.clone();
-                            cuboClone.position.set(-inicio + (i * 20), -10, (-k * fim) - (j * 20));
-                            scene.add(cuboClone);
-                            objects.push(cuboClone);
-
-                        }
-                    }
-
-                    //plano lateral esquerda
-                    for (let l = 0; l < 5; l++) {
-                        for (let m = 0; m < 3; m++) {
-                            cuboCloneLateral = cubo.clone();
-                            cuboCloneLateral.position.set(-60, -10 + (m * 20), (-k * fim) - (l * 20));
-                            scene.add(cuboCloneLateral);
-                            objects.push(cuboCloneLateral);
-                        }
-                    }
-                    //lateral direita
-                    for (let n = 0; n < 5; n++) {
-                        for (let o = 0; o < 3; o++) {
-                            cuboCloneLateral = cubo.clone();
-                            cuboCloneLateral.position.set(60, -10 + (o * 20), (-k * fim) - (n * 20));
-                            scene.add(cuboCloneLateral);
-                            objects.push(cuboCloneLateral);
-                        }
-                    }
-                }
-            }
-        });
-    }
-});
+// window.addEventListener('mousedown', function () {
+//     const objectExist = objects.find(function (object) {
+//         return (object.position.x === assetManager.aviao.position.x) &&
+//             (object.position.z === assetManager.aviao.position.z)
+//     });
+//     if (!objectExist) {
+//         intersects.forEach(function (intersect) {
+//         });
+//     }
+// });
 
 
 
@@ -278,19 +263,25 @@ render();
 function render() {
     requestAnimationFrame(render);
     if (!isPaused) {
+        // if(playMusic){
+        //     //tocar o arrquivo ambiente.mp3
+        //     audioAmbiente.play();
+        // }
+        // else{
+        //     audioAmbiente.pause();
+        // }
+        explosion.animate();
         assetManager.checkLoaded();
         updateAsset();
+        UpdateProjetil();
         renderer.render(scene, camera) // Render scene
-        /*if (projeteis.length > 0) {
-            atualizarProjetil();
-        }*/
     }
 }
 
 //funçoes
 function CriarPlano(scene, tamanhoPlano) {
     const planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano),
+        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano+4),
         new THREE.MeshLambertMaterial({
             side: THREE.DoubleSide,
             visible: false
@@ -302,22 +293,6 @@ function CriarPlano(scene, tamanhoPlano) {
 
     return planeMesh;
 }
-
-/*criar highlight
-function CriarHighLight(scene) {
-    const highlightMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1, 1),
-        new THREE.MeshLambertMaterial({
-            side: THREE.DoubleSide
-        })
-    );
-    highlightMesh.rotateX(-Math.PI / 2);
-    highlightMesh.position.set(0.5, 0.0, 0.5);
-    scene.add(highlightMesh);
-    highlight = highlightMesh;
-
-    return highlightMesh;
-}*/
 
 //Set luz direcional
 function setDirectionalLighting(position) {
@@ -362,14 +337,14 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
-            //var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
+            var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
         }
         if (obj.name == 'torreta') {
             obj.rotateY(1.57);
             obj.userData.collidable = true;
-            obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-45, 45))
+            obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-500, 45))
             assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
-            //var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
+            var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
         }
 
         obj.receiveShadow = true;
@@ -404,9 +379,16 @@ function toggleSimulation() {
     document.body.style.cursor = isCursorVisible ? 'auto' : 'none';
 }
 
+function trilhaSonora(){
+    playMusic = !playMusic;
+}
+
 function onKeyPress(event) {
     if (event.code === 'Escape') {
         toggleSimulation();
+    }
+    if(event.code === "KeyS"){
+        trilhaSonora();
     }
     if (event.code === 'Digit1') {
         velocidade = 0.1;
@@ -419,33 +401,30 @@ function onKeyPress(event) {
     }
 }
 
+
 function onRightClick(event) {
-    event.preventDefault();
-    if (!isPaused) {
-        if (!isShooting) {
-            isShooting = true;
+    let tiro = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 4), new THREE.MeshPhongMaterial({ color: 'blue' }));
+    tiro.castShadow = true;
+    tiro.receiveShadow = true;
 
-            // Obter a posição do clique do mouse em coordenadas do mundo
-            const mousePosition = new THREE.Vector2(
-                (event.clientX / window.innerWidth) * 2 - 1,
-                -(event.clientY / window.innerHeight) * 2 + 1
-            );
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(mousePosition, camera);
-            shootingDirection.copy(raycaster.ray.direction);
+    let pos = new THREE.Vector3();
+    assetManager.aviao.getWorldPosition(pos);
+    tiro.position.copy(pos);
 
-            // Disparar o tiro na direção do mouse
-            tiro = atirarProjetil();
-        }
-    } else {
-        toggleSimulation();
-    }
+    tiro.lookAt(smallSquare.position);
+    scene.add(tiro);
+    tiros.push(tiro);
+    let tiroHB = new THREE.Box3().setFromObject(tiro);
+    tirosHB.push(tiroHB);
+
+    tiro.userData = {};
+    tiro.userData.initialPosition = new THREE.Vector3().copy(tiro.position);
 }
 
 function createBBHelper(bb, color) {
     // Create a bounding box helper
     let helper = new THREE.Box3Helper(bb, color);
-    //scene.add(helper);
+    scene.add(helper);
 }
 
 
@@ -453,93 +432,160 @@ function updateAsset()
 {
    if(assetManager.allLoaded)
    {
-
         //config da camera subir e descer
-        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+        rotateAviao();
+        
         if(assetManager.aviao.position.y > 50){
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha/2);
         }
         if(assetManager.aviao.position.y < 50){
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha*2);
         }
-        let movX = (mousePosition.x) * -0.015;
-        let movY =  (mousePosition.y) * -0.015;  
 
-        //movimento x,y,z
-        //assetManager.aviao.rotation.x = movX * 0.0000025; //+ 80; /////////?? esta virando o aviao
-        assetManager.aviao.rotation.x = movX * 55 * -1;
-        assetManager.aviao.rotation.z = movX * 20;
-        assetManager.aviao.rotation.y = movY * 25;
-
-        assetManager.aviao.position.z -= velocidade;
-        assetManager.hbAviao.setFromObject(assetManager.aviao);
+        //assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         cameraHolder.position.z -= velocidade;
         targetLuz.position.z -= velocidade;
         dirLight.position.z -= velocidade;
         smallSquare.position.z -= velocidade;
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            const bullet = bullets[i];
-            bullet.position.add(bullet.velocity);
-            bulletHB = new THREE.Box3().setFromObject(bullet);
-            
-            // Verificar colisões dos tiros com objetos ou limites do cenário e remover os tiros colididos
-            if (checkCollisions(bullet,assetManager.torreta) || bullet.position.y < 0) {
-                bullets.splice(i, 1);
-                scene.remove(bullet);
-            }
-          }
       }
 }
+function UpdateProjetil() {
+    if (tiros != null) {
+        tiros.forEach((b, i) => {
+            b.translateZ(2);
+            tirosHB[i].copy(b.geometry.boundingBox).applyMatrix4(b.matrixWorld);
+            tirosHB[i].setFromObject(b);
+            let distancia = b.position.distanceTo(b.userData.initialPosition);
+            if (b.position.y < 0 || distancia > 500 || b.position.x < -45 || b.position.x > 45 || b.position.y > 100) {
+                scene.remove(b);
+                tiros.splice(i, 1);
+                tirosHB.splice(i, 1);
 
-function criarProjetil() {
-    let balaGeometry = new THREE.BoxGeometry(5.0, 5.0, 5.0);
-    const materialProjetil = setDefaultMaterial("rgb(255,0,0)");
-    let bala = new THREE.Mesh(balaGeometry,materialProjetil);
-    let obj1 = new THREE.Vector3(
-      smallSquare.position.x,
-      smallSquare.position.y,
-      smallSquare.position.z
-    );
-    let obj2 = new THREE.Vector3(
-      assetManager.aviao.position.x,
-      assetManager.aviao.position.y,
-      assetManager.aviao.position.z
-    );
-    let direction = new THREE.Vector3();
-    direction.subVectors(obj2, obj1).normalize();
-    let quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction);
-    bala.setRotationFromQuaternion(quaternion);
-  
-    bala.scale.set(1, 1, 5);
-    scene.add(bala);
-    bala.position.copy(assetManager.aviao.position);
-    bala.position.y += 10;
-    //let bbbala = new THREE.Box3().setFromObject(bala);
-    //scene.add(bbbala);
-  
-    return bala;
+                i--;
+            }
+            checkCollisions(tirosHB[i]);
+        })
+    }
 }
-function checkCollisions(bala, torreta) {
-    let collision = torreta.intersectsBox(bala);
+function checkCollisions(bala) {
+    let collision = assetManager.hbTorreta.intersectsBox(bala);
     if (collision) {
-     torreta.traverse(function (node) {
-        if (node.material) {
-          node.material.opacity = 0;
-        }
-      });
+        assetManager.torreta.traverse(function (node) {
+            if (node.material) {
+                explosion.build(); // Build explosion object
+                explosion.play = true; // Execute on start
+                node.material.opacity = 0;
+            }
+        });
     }
 }
 
-function atirarProjetil() {
-    const projetil = criarProjetil();
-  
-    projeteis.push(projetil);
+function changeObjectColor(color) {
+    if (assetManager.aviao) {
+        assetManager.aviao.traverse(function (child) {
+            if (child.material)
+                child.material.color.set(assetManager.aviao.material.color - (0, 83.3, 83.3));
+        });
+    }
 }
-  
-function atualizarProjetil() {
-    for (let i = 0; i < projeteis.length; i++){
-      projeteis[i].translateZ(-8 * velocidade);
+
+function rotateAviao(){
+    let aviao = assetManager.aviao;
+    
+    let quaternionZ;
+    let quaternionX;
+    let quaternionY;
+    let distancia = (aviao.position.x - mousePosition.x);
+
+    if(distancia < -45){
+        distancia = -45;
+    }
+    if(distancia > 45){
+        distancia =  45;
+    }
+    
+    quaternionZ = new THREE.Quaternion();
+    quaternionX = new THREE.Quaternion();
+    quaternionY = new THREE.Quaternion();
+    quaternionZ.setFromAxisAngle(new THREE.Vector3(0, 0, -1), (Math.PI * (distancia / 25)) / -8);
+    quaternionX.setFromAxisAngle(new THREE.Vector3(-1, 0, 0), (Math.PI * (distancia/ 35)) / -8);
+    quaternionY.setFromAxisAngle(new THREE.Vector3(0, -1, 0), (Math.PI * (distancia/ 35)) / -8 )
+
+    aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+    aviao.quaternion.slerp(quaternionZ, 0.015);
+    aviao.quaternion.slerp(quaternionX, 0.015);
+    aviao.quaternion.slerp(quaternionY, 0.015);
+
+    aviao.position.z -= velocidade;
+
+}
+function CriarTrincheiras(numTrincheiras) {
+    var cuboClone;
+    var cuboCloneLateral;
+    for (let k = 0; k < numTrincheiras; k++) {
+        if (k == 0) {
+            //centro
+            for (let j = 0; j < 5; j++) {
+                for (let i = 0; i < 5; i++) {
+                    cuboClone = cubo.clone();
+                    cuboClone.position.set(-inicio + (i * 20), -10, fim - (j * 20));
+                    scene.add(cuboClone);
+                    objects.push(cuboClone);
+                }
+                if (j % 2 == 0) {
+                    loadGLBFile('./objeto/', 'torreta', true, 5);
+                }
+            }
+            //lateral esquerda
+            for (let l = 0; l < 5; l++) {
+                for (let m = 0; m < 3; m++) {
+                    cuboCloneLateral = cubo.clone();
+                    cuboCloneLateral.position.set(-60, -10 + (m * 20), fim - (l * 20));
+                    scene.add(cuboCloneLateral);
+                    objects.push(cuboCloneLateral);
+                }
+            }
+            //lateral direita
+            for (let n = 0; n < 5; n++) {
+                for (let o = 0; o < 3; o++) {
+                    cuboCloneLateral = cubo.clone();
+                    cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
+                    scene.add(cuboCloneLateral);
+                    objects.push(cuboCloneLateral);
+                }
+            }
+        }
+        else {
+            //centro
+            for (let j = 0; j < 5; j++) {
+                for (let i = 0; i < 5; i++) {
+                    cuboClone = cubo.clone();
+                    cuboClone.position.set(-inicio + (i * 20), -10, (-k * fim) - (j * 20));
+                    scene.add(cuboClone);
+                    objects.push(cuboClone);
+
+                }
+            }
+
+            //plano lateral esquerda
+            for (let l = 0; l < 5; l++) {
+                for (let m = 0; m < 3; m++) {
+                    cuboCloneLateral = cubo.clone();
+                    cuboCloneLateral.position.set(-60, -10 + (m * 20), (-k * fim) - (l * 20));
+                    scene.add(cuboCloneLateral);
+                    objects.push(cuboCloneLateral);
+                }
+            }
+            //lateral direita
+            for (let n = 0; n < 5; n++) {
+                for (let o = 0; o < 3; o++) {
+                    cuboCloneLateral = cubo.clone();
+                    cuboCloneLateral.position.set(60, -10 + (o * 20), (-k * fim) - (n * 20));
+                    scene.add(cuboCloneLateral);
+                    objects.push(cuboCloneLateral);
+                }
+            }
+        }
     }
 }

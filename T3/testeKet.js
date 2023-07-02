@@ -114,26 +114,7 @@ function loadGLBFile(modelName, centerObject, sound = null)
     }, null, null);
 }
 
-// Normalize scale and multiple by the newScale
-function normalizeAndRescale(obj, newScale)
-{
-  var scale = getMaxSize(obj); // Available in 'utils.js'
-  obj.scale.set(newScale * (1.0/scale),
-                newScale * (1.0/scale),
-                newScale * (1.0/scale));
-  return obj;
-}
 
-function fixPosition(obj)
-{
-  // Fix position of the object over the ground plane
-  var box = new THREE.Box3().setFromObject( obj );
-  if(box.min.y > 0)
-    obj.translateY(-box.min.y);
-  else
-    obj.translateY(-1*box.min.y);
-  return obj;
-}
 
 // Function to rotate the man around the center object
 function rotateMan(delta)

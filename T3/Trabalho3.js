@@ -15,6 +15,7 @@ import { Arvore } from './Arvore.js';
 
 let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
+let isActive = true;
 let isCursorVisible = false;
 var lerpConfig;
 let isShooting = false;
@@ -442,9 +443,16 @@ function toggleSimulation() {
     document.body.style.cursor = isCursorVisible ? 'auto' : 'none';
 }
 
+function trilhaSonora(){
+    isActive = !isActive;
+}
+
 function onKeyPress(event) {
     if (event.code === 'Escape') {
         toggleSimulation();
+    }
+    if(event.code === "KeyS"){
+        trilhaSonora();
     }
     if (event.code === 'Digit1') {
         velocidade = 0.1;
@@ -486,10 +494,16 @@ function createBBHelper(bb, color) {
 
 function updateAsset() {
     if (assetManager.allLoaded) {
+
         assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+
         if (assetManager.aviao.position.y > 10) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 2);
         }
+        if(assetManager.aviao.position.y < 10){
+            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha * 2);
+        }
+
         assetManager.aviao.position.z -= velocidade;
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
