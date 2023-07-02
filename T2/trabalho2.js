@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-import * as THREE from 'three';
-import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-import {
-  initRenderer,
-  InfoBox,
-  onWindowResize,
-  createLightSphere,
-  getMaxSize
-} from "../libs/util/util.js";
-=======
   import * as THREE from 'three';
   import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
   import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
@@ -20,7 +8,6 @@ import {
     onWindowResize,
     getMaxSize
   } from "../libs/util/util.js";
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
 let scene, renderer, camera, orbit; // Initial variables
 
@@ -33,24 +20,26 @@ let camPos = new THREE.Vector3(0.0, 30.0, 70.0);
 let camUp = new THREE.Vector3(0.0, 1.0, 0.0);
 let camLook = new THREE.Vector3(0.0, 0.0, 0.0);
 
-camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.copy(camPos);
-camera.up.copy(camUp);
-camera.lookAt(camLook);
+  camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.copy(camPos);
+  camera.up.copy(camUp);
+  let cameraHolder = new THREE.Object3D();
+  cameraHolder.add(camera);
+  scene.add(cameraHolder);
 
-<<<<<<< HEAD
-=======
+  var plano = new Plano(scene);
+
   //Plano do Raycaster
   // Variáveis para armazenar a posição do mouse
   const mouse = new THREE.Vector2();
   const raycaster = new THREE.Raycaster();
+  raycaster.layers.enable(0);
   var planeGeometry = new THREE.PlaneGeometry(250, 150);
   var planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
   var raycastPlane = new THREE.Mesh(planeGeometry, planeMaterial);
   raycastPlane.translateY(15);
   raycastPlane.translateX(-2.8);
   scene.add(raycastPlane);
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
 //Plano do Raycaster
 // Variáveis para armazenar a posição do mouse
@@ -65,23 +54,13 @@ scene.add(raycastPlane);
 
 //Luz
 
-const ambientColor = "rgb(50,50,50)";
-let ambientLight = new THREE.AmbientLight(ambientColor);
-scene.add(ambientLight);
-
-let lightPosition = new THREE.Vector3(5, 15, 0);
-let lightColor = "rgb(255,255,255)";
-let dirLight = new THREE.DirectionalLight(lightColor);
-setDirectionalLighting(lightPosition);
-// Sphere to represent the light
-let lightSphere = createLightSphere(scene, 0.5, 10, 10, lightPosition);
-// Create helper for the spotlight
-const spotHelper = new THREE.SpotLightHelper(dirLight, 0xFF8C00);
-scene.add(spotHelper);
-
-// Create helper for the dirLight shadow
-const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
-scene.add(shadowHelper);
+  const ambientColor = "rgb(50,50,50)";
+  let ambientLight = new THREE.AmbientLight(ambientColor);
+  scene.add(ambientLight);
+  let lightPosition = new THREE.Vector3(10, 15, 0);
+  let lightColor = "rgb(255,255,255)";
+  let dirLight = new THREE.DirectionalLight(lightColor);
+  setDirectionalLighting(lightPosition);
 
 //definindo controles
 orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
@@ -133,119 +112,130 @@ for (let i = 0; i < 3; i++) {
   loadGLBFile('/T2/objeto/', 'gun_turrent', true, 2.0);
 }
 
-<<<<<<< HEAD
-//Criando aviao
-var movimentoAviao = null;
-var destino =  new THREE.Vector3( 0.0, 0.0, 1.0);
-var aviaoSpeed = 1;
-loadGLBFile('/T2/objeto/', 'low-poly_airplane', true, 13.0);
-let posicaoAviao = new THREE.Vector3(0, 10, 0);
-
-//Criando mira
-// Criar as miras sem preenchimento interno
-const tamanhoPequeno = 1.5;
-const tamanhoGrande = tamanhoPequeno*2;
-const smallSquareGeometry = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
-  new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
-  new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0),
-  new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
-  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0) // Fechar o loop
-]);
-const largeSquareGeometry = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
-  new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
-  new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
-  new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
-  new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0) // Fechar o loop
-]);
-const linhaExterna1 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
-  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0)
-]);
-const linhaExterna2 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
-  new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0)
-]);
-const linhaExterna3 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
-  new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0)
-]);
-const linhaExterna4 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
-  new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0)
-]);
-const linhaInterna1 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
-  new THREE.Vector3(-tamanhoPequeno/2, tamanhoPequeno/2, 0)
-]);
-const linhaInterna2 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
-  new THREE.Vector3(tamanhoPequeno/2, tamanhoPequeno/2, 0)
-]);
-const linhaInterna3 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0),
-  new THREE.Vector3(tamanhoPequeno/2, -tamanhoPequeno/2, 0)
-]);
-const linhaInterna4 = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
-  new THREE.Vector3(-tamanhoPequeno/2, -tamanhoPequeno/2, 0)
-]);
-
-const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
-const linhavertice1 = new THREE.Line(linhaExterna1,material);
-const linhavertice2 = new THREE.Line(linhaExterna2,material);
-const linhavertice3 = new THREE.Line(linhaExterna3,material);
-const linhavertice4 = new THREE.Line(linhaExterna4,material);
-const linhaverticeinterno1 = new THREE.Line(linhaInterna1,material);
-const linhaverticeinterno2 = new THREE.Line(linhaInterna2,material);
-const linhaverticeinterno3 = new THREE.Line(linhaInterna3,material);
-const linhaverticeinterno4 = new THREE.Line(linhaInterna4,material);
-const smallSquare = new THREE.Line(smallSquareGeometry, material);
-const largeSquare = new THREE.Line(largeSquareGeometry, material);
-largeSquare.add(linhavertice1);
-largeSquare.add(linhavertice2);
-largeSquare.add(linhavertice3);
-largeSquare.add(linhavertice4);
-smallSquare.add(linhaverticeinterno1);
-smallSquare.add(linhaverticeinterno2);
-smallSquare.add(linhaverticeinterno3);
-smallSquare.add(linhaverticeinterno4);
-smallSquare.position.set(0,30,0);
-largeSquare.position.set(0,30,0);
-scene.add(smallSquare);
-scene.add(largeSquare);
-
-//Render
-render();
-
-function render() {
-  assetManager.checkLoaded();
-  requestAnimationFrame(render);
-  renderer.render(scene, camera) // Render scene
-  movimentoAviao.position.z -= 1;
-  
-}
-
-=======
   //Criando Torreta
   for (let i = 0; i < 3; i++) {
     loadGLBFile('/T2/objeto/', 'gun_turrent', true, 7.0);
   }
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
-function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
-  var loader = new GLTFLoader();
-  loader.load(modelPath + modelName + '.glb', function (gltf) {
-    obj = gltf.scene;
-    obj.name = modelName;
-    obj.visible = visibility;
-    obj.traverse(function (child) {
-      if (child) {
-        child.castShadow = true;
+  //Criando aviao
+  var movimentoAviao = null;
+  var aviaoSpeed = 0.1;
+  loadGLBFile('/T2/objeto/', 'low-poly_airplane', true, 13.0);
+  let posicaoAviao = new THREE.Vector3(0, 10, 0);
+
+  //Criando mira
+  // Criar as miras sem preenchimento interno
+  const tamanhoPequeno = 1.5;
+  const tamanhoGrande = tamanhoPequeno * 2;
+  const smallSquareGeometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
+    new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
+    new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0),
+    new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
+    new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0) // Fechar o loop
+  ]);
+  const largeSquareGeometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
+    new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
+    new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
+    new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
+    new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0) // Fechar o loop
+  ]);
+  const linhaExterna1 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-tamanhoGrande, tamanhoGrande, 0),
+    new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0)
+  ]);
+  const linhaExterna2 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(tamanhoGrande, tamanhoGrande, 0),
+    new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0)
+  ]);
+  const linhaExterna3 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(tamanhoGrande, -tamanhoGrande, 0),
+    new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0)
+  ]);
+  const linhaExterna4 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-tamanhoGrande, -tamanhoGrande, 0),
+    new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0)
+  ]);
+  const linhaInterna1 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-tamanhoPequeno, tamanhoPequeno, 0),
+    new THREE.Vector3(-tamanhoPequeno / 2, tamanhoPequeno / 2, 0)
+  ]);
+  const linhaInterna2 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(tamanhoPequeno, tamanhoPequeno, 0),
+    new THREE.Vector3(tamanhoPequeno / 2, tamanhoPequeno / 2, 0)
+  ]);
+  const linhaInterna3 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(tamanhoPequeno, -tamanhoPequeno, 0),
+    new THREE.Vector3(tamanhoPequeno / 2, -tamanhoPequeno / 2, 0)
+  ]);
+  const linhaInterna4 = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-tamanhoPequeno, -tamanhoPequeno, 0),
+    new THREE.Vector3(-tamanhoPequeno / 2, -tamanhoPequeno / 2, 0)
+  ]);
+
+  const material = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+  const linhavertice1 = new THREE.Line(linhaExterna1, material);
+  const linhavertice2 = new THREE.Line(linhaExterna2, material);
+  const linhavertice3 = new THREE.Line(linhaExterna3, material);
+  const linhavertice4 = new THREE.Line(linhaExterna4, material);
+  const linhaverticeinterno1 = new THREE.Line(linhaInterna1, material);
+  const linhaverticeinterno2 = new THREE.Line(linhaInterna2, material);
+  const linhaverticeinterno3 = new THREE.Line(linhaInterna3, material);
+  const linhaverticeinterno4 = new THREE.Line(linhaInterna4, material);
+  const smallSquare = new THREE.Line(smallSquareGeometry, material);
+  const largeSquare = new THREE.Line(largeSquareGeometry, material);
+  largeSquare.add(linhavertice1);
+  largeSquare.add(linhavertice2);
+  largeSquare.add(linhavertice3);
+  largeSquare.add(linhavertice4);
+  smallSquare.add(linhaverticeinterno1);
+  smallSquare.add(linhaverticeinterno2);
+  smallSquare.add(linhaverticeinterno3);
+  smallSquare.add(linhaverticeinterno4);
+  smallSquare.position.set(0, 30, 0);
+  largeSquare.position.set(0, 30, 0);
+  scene.add(smallSquare);
+  scene.add(largeSquare);
+
+  //Render
+  render();
+
+  function render() {
+    assetManager.checkLoaded();
+    requestAnimationFrame(render);
+    
+    if (!isPaused) {
+      const velocidadePadrao = 1; // Velocidade padrão dos outros objetos na cena
+      const proporcaoVelocidade = velocidadePadrao / aviaoSpeed;
+      renderer.render(scene, camera);
+      cameraHolder.position.z -= aviaoSpeed * proporcaoVelocidade;
+      largeSquare.position.z -= aviaoSpeed * proporcaoVelocidade;
+      smallSquare.position.z -= aviaoSpeed * proporcaoVelocidade;
+      raycastPlane.position.z -= aviaoSpeed *proporcaoVelocidade;
+      
+      // desenha o plano
+      let posicaoCameraZ = cameraHolder.position.z;
+      plano.desenhaPlano(posicaoCameraZ);
+
+      // Atualizar a posição das miras com base na posição do mouse
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObject(raycastPlane);
+
+      if (intersects.length > 0) {
+        const intersection = intersects[0];
+        let diferenca = smallSquare.position;
+        smallSquare.position.copy(intersection.point);
+        const largeSquareSpeed = 1;
+        const aviaoFoco = 1;
+        const direction = intersection.point.clone().sub(largeSquare.position).normalize();
+        const directionAviao = intersection.point.clone().sub(posicaoAviao).normalize();
+        if (movimentoAviao != null) {
+          movimentoAviao.position.add(directionAviao.multiplyScalar(aviaoFoco));
+        }
+        largeSquare.position.add(direction.multiplyScalar(largeSquareSpeed));
       }
-<<<<<<< HEAD
-=======
     }
   }
 
@@ -302,7 +292,6 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
       obj.castShadow = true;
       assetManager[modelName] = obj;
       scene.add(obj);
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
     });
     obj.traverse(function (node) {
       if (node.material) node.material.side = THREE.DoubleSide;
@@ -349,99 +338,17 @@ function fixPosition(obj) {
 function setDirectionalLighting(position) {
   dirLight.position.copy(position);
 
-  // Shadow settings
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.width = 512;
-  dirLight.shadow.mapSize.height = 512;
-  dirLight.shadow.camera.near = 1;
-  dirLight.shadow.camera.far = 30;
-  dirLight.shadow.camera.left = -15;
-  dirLight.shadow.camera.right = 15;
-  dirLight.shadow.camera.top = 15;
-  dirLight.shadow.camera.bottom = -15;
-  dirLight.name = "Direction Light";
-
-  scene.add(dirLight);
-}
-
-function createCubePlane() {
-  const planeSize = 50; // Tamanho do plano
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
-
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, 1, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.x = (i - numCubes / 2) * cubeSize;
-      cube.position.z = (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      scene.add(cube); // Adiciona o cubo à cena
-    }
-  }
-}
-function createCubePlaneLateral() {
-  const planeSize = 50; // Tamanho do plano
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
-
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize,15,15,15);
-      const cubeMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.x = (25);
-      cube.position.y = (i - numCubes / 2) * cubeSize;
-      cube.position.z = (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      if(cube.position.y >= 0)
-        scene.add(cube); // Adiciona o cubo à cena
-    }
-  }
-}
-function createCubePlaneLateralEsq() {
-  const planeSize = 50; // Tamanho do plano
-  const cubeSize = 5; // Tamanho dos cubos
-  const numCubes = planeSize / cubeSize; // Quantidade de cubos em cada dimensão
-
-  for (let i = 0; i < numCubes; i++) {
-    for (let j = 0; j < numCubes; j++) {
-      const cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const cubeMaterial = new THREE.MeshLambertMaterial({ color: 'lightgreen'});
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.x = (-30);
-      cube.position.y = (i - numCubes / 2) * cubeSize;
-      cube.position.z = (j - numCubes / 2) * cubeSize;
-      cube.receiveShadow = true;
-      if(cube.position.y >= 0)
-        scene.add(cube); // Adiciona o cubo à cena
-    }
-  }
-}
-// Função para obter a posição do mouse
-function onMouseMove(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  // Atualizar a posição das miras com base na posição do mouse
-  raycaster.setFromCamera(mouse, camera);
-
-<<<<<<< HEAD
-  const intersects = raycaster.intersectObject(raycastPlane);
-=======
     // Shadow settings
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 512;
     dirLight.shadow.mapSize.height = 512;
-    dirLight.shadow.camera.near = 1;
-    dirLight.shadow.camera.far = 300;
-    dirLight.shadow.camera.left = -150;
-    dirLight.shadow.camera.right = 150;
+    dirLight.shadow.camera.near = 0.2;
+    dirLight.shadow.camera.far = 1500;
+    dirLight.shadow.camera.left = -150.0;
+    dirLight.shadow.camera.right = 150.0;
     dirLight.shadow.camera.top = 150;
     dirLight.shadow.camera.bottom = -150;
     dirLight.name = "Direction Light";
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
 
   if (intersects.length > 0) {
       const intersection = intersects[0];
@@ -453,8 +360,6 @@ function onMouseMove(event) {
   }
 }
 
-<<<<<<< HEAD
-=======
   // Função para obter a posição do mouse
   function onMouseMove(event) {
     // Atualizar a última posição do mouse
@@ -464,4 +369,3 @@ function onMouseMove(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
->>>>>>> d80891bf68e23c313c8118b74fec100b71841812
