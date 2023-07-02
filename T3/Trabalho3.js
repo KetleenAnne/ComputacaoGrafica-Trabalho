@@ -65,6 +65,8 @@ let explosion = {
     },
 }
 document.body.style.cursor = 'none';
+let torretas = [];
+let hbtorretas = [];
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
 //camera
@@ -198,11 +200,6 @@ var lerpConfig = {
     move: true
 }
 
-var lerpConfigTiro = {
-    destination: new THREE.Vector3(0.0, 0.2, 0.0),
-    alpha: 0.5,
-    move: true
-}
 
 //Plano
 var ground = new THREE.TextureLoader().load("./Textures/death-star-texture ground.jpg");
@@ -234,83 +231,7 @@ function onMouseMove(event) {
 
 const objects = [];
 CriarTrincheiras(5);
-// window.addEventListener('mousedown', function () {
-//     const objectExist = objects.find(function (object) {
-//         return (object.position.x === assetManager.aviao.position.x) &&
-//             (object.position.z === assetManager.aviao.position.z)
-//     });
-//     if (!objectExist) {
-//         intersects.forEach(function (intersect) {
-//             var cuboClone;
-//             var cuboCloneLateral;
-//             for (let k = 0; k < 5; k++) {
-//                 if (k == 0) {
-//                     //centro
-//                     for (let j = 0; j < 5; j++) {
-//                         for (let i = 0; i < 5; i++) {
-//                             cuboClone = cubo.clone();
-//                             cuboClone.position.set(-inicio + (i * 20), -10, fim - (j * 20));
-//                             scene.add(cuboClone);
-//                             objects.push(cuboClone);
-//                         }
-//                         if (j % 2 == 0) {
-//                             loadGLBFile('./objeto/', 'torreta', true, 5);
-//                         }
-//                     }
-//                     //lateral esquerda
-//                     for (let l = 0; l < 5; l++) {
-//                         for (let m = 0; m < 3; m++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(-60, -10 + (m * 20), fim - (l * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                     //lateral direita
-//                     for (let n = 0; n < 5; n++) {
-//                         for (let o = 0; o < 3; o++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                 }
-//                 else {
-//                     //centro
-//                     for (let j = 0; j < 5; j++) {
-//                         for (let i = 0; i < 5; i++) {
-//                             cuboClone = cubo.clone();
-//                             cuboClone.position.set(-inicio + (i * 20), -10, (-k * fim) - (j * 20));
-//                             scene.add(cuboClone);
-//                             objects.push(cuboClone);
 
-//                         }
-//                     }
-
-//                     //plano lateral esquerda
-//                     for (let l = 0; l < 5; l++) {
-//                         for (let m = 0; m < 3; m++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(-60, -10 + (m * 20), (-k * fim) - (l * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                     //lateral direita
-//                     for (let n = 0; n < 5; n++) {
-//                         for (let o = 0; o < 3; o++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(60, -10 + (o * 20), (-k * fim) - (n * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                 }
-//             }
-//         });
-//     }
-// });
 
 
 
@@ -399,7 +320,7 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.rotateY(3.13);
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
-            assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
+            assetManager.hbAviao.setFromObject(obj);
             var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
         }
         if (obj.name == 'torreta') {
@@ -408,6 +329,8 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-500, 45))
             assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
             var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
+            torretas.push(obj);
+            hbtorretas.push(new THREE.Box3().setFromObject(obj));
         }
 
         obj.receiveShadow = true;
@@ -519,15 +442,22 @@ function UpdateProjetil() {
     }
 }
 function checkCollisions(bala) {
-    let collision = assetManager.hbTorreta.intersectsBox(bala);
-    if (collision) {
-        assetManager.torreta.traverse(function (node) {
-            if (node.material) {
-                explosion.build(); // Build explosion object
-                explosion.play = true; // Execute on start
-                node.material.opacity = 0;
+    if(bala != null && torretas != null){
+        let collision; 
+        let i;
+        for (let i = 0; i < hbtorretas.length; i++) {
+            collision = hbtorretas[i].intersectsBox(bala);
+            if (collision) {
+                torretas[i].traverse(function (node) {
+                    if (node.material) {
+                        // explosion.build(); // Build explosion object
+                        // explosion.play = true; // Execute on start
+                        node.material.opacity = 0;
+                    }
+                });
             }
-        });
+            
+        }
     }
 }
 function changeObjectColor(color) {
