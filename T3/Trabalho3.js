@@ -12,10 +12,16 @@ let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
 let isCursorVisible = false;
 var lerpConfig;
-let isShooting = false;
+let numTirosLevados = 0;
+const colors = [
+    new THREE.Color(1, 1, 1),          // Branco
+    new THREE.Color(1, 0.8, 0.8),      // Tom avermelhado mais claro
+    new THREE.Color(1, 0.6, 0.6),      // Tom avermelhado médio
+    new THREE.Color(1, 0.4, 0.4),      // Tom avermelhado mais escuro
+    new THREE.Color(1, 0, 0)           // Vermelho completo
+  ];
 let tiros = [];
 let tirosHB = [];
-let tirosHBHelper = [];
 //explosao
 let explosion = {
     textures: [],
@@ -197,7 +203,10 @@ var lerpConfig = {
 //Skybox
 const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
     skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
+const skyboxSize = new THREE.Vector3();
 const skyboxGeometry = new THREE.BoxGeometry(window.innerWidth, window.innerHeight, window.innerWidth);
+skyboxGeometry.computeBoundingBox();
+skyboxGeometry.boundingBox.getSize(skyboxSize);
 const skyboxMaterial = new THREE.MeshBasicMaterial(
     {
         map: skyboxTexture,
@@ -412,13 +421,14 @@ function updateAsset() {
         if (assetManager.aviao.position.y > 10) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 2);
         }
-        assetManager.aviao.position.z -= velocidade;
+        //assetManager.aviao.position.z -= velocidade;
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         cameraHolder.position.z -= velocidade;
         targetLuz.position.z -= velocidade;
         dirLight.position.z -= velocidade;
         smallSquare.position.z -= velocidade;
+        skybox.position.copy(assetManager.aviao.position).sub(skyboxSize.multiplyScalar(0.5))
     }
 }
 
@@ -441,35 +451,36 @@ function UpdateProjetil() {
     }
 }
 function checkCollisions(bala) {
-
     if (bala != null && torretas != null) {
-        let collision;
-        let i;
-        for (i = 0; i < hbtorretas.length; i++) {
-            if (torretas[i] != null) {
-                collision = hbtorretas[i].intersectsBox(bala);
-                if (collision) {
-                    torretas[i].traverse(function (node) {
-                        if (node.material) {
-                            console.log("Colidiu com a bala");
-                            scene.remove(torretas[i]);
-                            scene.remove();
-                            torretas.splice(i, 1);
-                            hbtorretas.splice(i, 1);
-                            explosion.build(); // Build explosion object
-                            explosion.play = true; // Execute on start
-                        }
-                    });
-                }
-            }
+      let collision;
+      let i;
+      for (i = 0; i < hbtorretas.length; i++) {
+        if (torretas[i] != null) {
+          collision = hbtorretas[i].intersectsBox(bala);
+          if (collision) {
+            torretas[i].traverse(function(node) {
+              if (node.material) {
+                console.log("Colidiu com a bala");
+                explosion.build();
+                animateExplosion(torretas[i]);
+                scene.remove(torretas[i]); // Remova o objeto da cena
+                torretas.splice(i, 1);
+                hbtorretas.splice(i, 1);
+              }
+            });
+          }
         }
+      }
     }
-}
-function changeObjectColor(color) {
-    if (assetManager.aviao) {
+  }
+function changeObjectColor() {
+    if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
             if (child.material)
-                child.material.color.set(assetManager.aviao.material.color - (0, 83.3, 83.3));
+                if(numTirosLevados<5){
+                    numTirosLevados++;
+                }
+                child.material.color.set(colors[numTirosLevados]);
         });
     }
 }
@@ -543,3 +554,37 @@ function CriarTrincheiras(numTrincheiras) {
         }
     }
 }
+function animateExplosion(object) {
+    const initialScale = object.scale.clone();
+  
+    // Exiba a explosão
+    explosion.play();
+  
+    const duration = 500; // Duração da animação em milissegundos
+    let startTime = null;
+  
+    function explosionAnimation(timestamp) {
+      if (!startTime) startTime = timestamp;
+  
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1); // Progresso da animação (entre 0 e 1)
+  
+      // Ajuste a escala do objeto
+      object.scale.set(
+        initialScale.x * (1 + progress),
+        initialScale.y * (1 + progress),
+        initialScale.z * (1 + progress)
+      );
+  
+      if (progress < 1) {
+        // Continue a animação
+        requestAnimationFrame(explosionAnimation);
+      } else {
+        // Remova o objeto da cena
+        scene.remove(object);
+      }
+    }
+  
+    // Inicie a animação
+    requestAnimationFrame(explosionAnimation);
+  }
