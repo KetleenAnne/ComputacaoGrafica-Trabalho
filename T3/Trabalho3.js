@@ -1,17 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-import { IcosahedronBufferGeometry, Vector3 } from '../build/three.module.js';
+import { DoubleSide, Vector3 } from '../build/three.module.js';
 import {
     initRenderer,
-    initCamera,
-    initDefaultBasicLight,
-    setDefaultMaterial,
-    createLightSphere,
     onWindowResize,
     getMaxSize
 } from "../libs/util/util.js";
-import { Arvore } from './Arvore.js';
 
 let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
@@ -80,7 +75,7 @@ let cameraHolder = new THREE.Object3D();
 cameraHolder.add(camera);
 scene.add(cameraHolder);
 
-orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
+//orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 const tamanhoPlano = 100;
 //posiçao aviao
 const posicaoAviao = new Vector3(0.0, 10.0, 0.0);
@@ -199,6 +194,18 @@ var lerpConfig = {
     alpha: 0.05,
     move: true
 }
+//Skybox
+const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
+    skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
+const skyboxGeometry = new THREE.BoxGeometry(window.innerWidth, window.innerHeight, window.innerWidth);
+const skyboxMaterial = new THREE.MeshBasicMaterial(
+    {
+        map: skyboxTexture,
+        side: DoubleSide
+    });
+const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+skybox.scale.x = -1;
+scene.add(skybox);
 
 
 //Plano
@@ -239,9 +246,8 @@ CriarTrincheiras(5);
 window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
 window.addEventListener('keydown', onKeyPress, false);
 window.addEventListener('mousemove', onMouseMove, false);
-window.addEventListener('contextmenu', onRightClick, false);
-var TextureLoader = new THREE.TextureLoader();
-var velocidade = 0.1;
+window.addEventListener('click', onClick, false);
+var velocidade = 0.0;
 
 //RENDER
 render();
@@ -253,19 +259,13 @@ function render() {
         updateAsset();
         UpdateProjetil();
         renderer.render(scene, camera) // Render scene
-        if (assetManager.torreta) {
-            let colisao = assetManager.hbTorreta.intersectsBox(assetManager.torreta)
-            if (colisao) {
-                scene.remove(assetManager.torreta);
-            }
-        }
     }
 }
 
 //funçoes
 function CriarPlano(scene, tamanhoPlano) {
     const planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano+4),
+        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano + 4),
         new THREE.MeshLambertMaterial({
             side: THREE.DoubleSide,
             visible: false
@@ -328,7 +328,6 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.userData.collidable = true;
             obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-500, 45))
             assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
-            var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
             torretas.push(obj);
             hbtorretas.push(new THREE.Box3().setFromObject(obj));
         }
@@ -381,7 +380,7 @@ function onKeyPress(event) {
 }
 
 
-function onRightClick(event) {
+function onClick(event) {
     let tiro = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 4), new THREE.MeshPhongMaterial({ color: 'blue' }));
     tiro.castShadow = true;
     tiro.receiveShadow = true;
@@ -442,21 +441,27 @@ function UpdateProjetil() {
     }
 }
 function checkCollisions(bala) {
-    if(bala != null && torretas != null){
-        let collision; 
+
+    if (bala != null && torretas != null) {
+        let collision;
         let i;
-        for (let i = 0; i < hbtorretas.length; i++) {
-            collision = hbtorretas[i].intersectsBox(bala);
-            if (collision) {
-                torretas[i].traverse(function (node) {
-                    if (node.material) {
-                        // explosion.build(); // Build explosion object
-                        // explosion.play = true; // Execute on start
-                        node.material.opacity = 0;
-                    }
-                });
+        for (i = 0; i < hbtorretas.length; i++) {
+            if (torretas[i] != null) {
+                collision = hbtorretas[i].intersectsBox(bala);
+                if (collision) {
+                    torretas[i].traverse(function (node) {
+                        if (node.material) {
+                            console.log("Colidiu com a bala");
+                            scene.remove(torretas[i]);
+                            scene.remove();
+                            torretas.splice(i, 1);
+                            hbtorretas.splice(i, 1);
+                            explosion.build(); // Build explosion object
+                            explosion.play = true; // Execute on start
+                        }
+                    });
+                }
             }
-            
         }
     }
 }
@@ -483,7 +488,7 @@ function CriarTrincheiras(numTrincheiras) {
                     objects.push(cuboClone);
                 }
                 if (j % 2 == 0) {
-                    loadGLBFile('./objeto/', 'torreta', true, 5);
+                    loadGLBFile('./objeto/', 'torreta', true, 50);
                 }
             }
             //lateral esquerda
