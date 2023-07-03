@@ -38,7 +38,7 @@ const loadingManager = new THREE.LoadingManager( () => {
 // Loading objects and audio
 loadColladaObject(loadingManager, ' ../assets/objects/stormtrooper/stormtrooper.dae');
 loadGLTFObject(loadingManager, '../assets/objects/r2d2/scene.gltf');
-loadAudio(loadingManager, '../assets/sounds/imperial.mp3');
+loadAudio(loadingManager, '../T3/sounds/game-start.mp3');
 let gridHelper = new THREE.PolarGridHelper( 9 );
 scene.add( gridHelper );
 
@@ -57,7 +57,7 @@ function onButtonPressed() {
   let sound = new THREE.Audio( new THREE.AudioListener() );
   audioLoader.load( audioPath, function( buffer ) {
     sound.setBuffer( buffer );
-    sound.setLoop( true );
+    //sound.setLoop( true );
     sound.play(); 
   });
 }

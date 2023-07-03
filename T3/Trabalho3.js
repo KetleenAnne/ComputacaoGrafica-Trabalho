@@ -66,8 +66,7 @@ let explosion = {
         }
     },
 }
-
-document.body.style.cursor = 'none';
+let audioLoader, audioPath;
 let torretas = [];
 let hbtorretas = [];
 scene = new THREE.Scene();    // Create main scene
@@ -135,6 +134,24 @@ let lightPosition = new THREE.Vector3(70, 90, 0);
 let lightColor = "rgb(255,255,255)";
 let dirLight = new THREE.DirectionalLight(lightColor);
 
+
+const loadingManager = new THREE.LoadingManager(() => {
+    let loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.transition = 0;
+    loadingScreen.style.setProperty('--speed1', '0');
+    loadingScreen.style.setProperty('--speed2', '0');
+    loadingScreen.style.setProperty('--speed3', '0');
+
+    let button = document.getElementById("myBtn")
+    button.style.backgroundColor = 'Red';
+    button.innerHTML = 'Start';
+    button.addEventListener("click", onButtonPressed);
+});
+
+loadAudio(loadingManager, './sounds/game-start.mp3');
+
+
+
 //criando target
 const materialtarget = new THREE.MeshBasicMaterial({ color: 'lightgreen', visible: false });
 const targetGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -153,7 +170,7 @@ const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
 //scene.add(shadowHelper);
 
 //Criando aviao
-loadGLBFile('./objeto/', 'aviao', true, 13.0);
+loadGLBFile('./objeto/', 'aviao', true, 13.0, loadingManager);
 
 //cria Mira
 const tamanhoPequeno = 1.5;
@@ -253,6 +270,40 @@ function onMouseMove(event) {
 const objects = [];
 CriarTrincheiras(5);
 
+// //----------------------------------------------------------------------------
+//-- AUDIO STUFF -------------------------------------------------------------
+
+//-------------------------------------------------------
+// Create a listener and add it to que camera
+var firstPlay = true;
+var listener = new THREE.AudioListener();
+camera.add(listener);
+
+// create a global audio source
+const som = new THREE.Audio(listener);
+
+// Create ambient sound
+var audio = new THREE.AudioLoader();
+audio.load('./sounds/ambiente.mp3', function (buffer) {
+    som.setBuffer(buffer);
+    som.setLoop(true);
+    som.setVolume(0.5);
+    //sound.play(); // Will play when start button is pressed
+});
+
+
+
+//-- Create tiro sound ---------------------------------------------------       
+const tiroSound = new THREE.PositionalAudio(listener);
+audioLoader.load('./sounds/tiroaviao.mp3', function (buffer) {
+    tiroSound.setBuffer(buffer);
+    //tiroSound.setLoop(true);
+    //sound1.play(); // Will play when start button is pressed
+}); // Will be added to the target object
+
+//-- END OF AUDIO STUFF -------------------------------------------------------
+
+// Create the loading manager
 
 
 
@@ -312,8 +363,8 @@ function setDirectionalLighting(position) {
 }
 
 //LoadGLB
-function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
-    var loader = new GLTFLoader();
+function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
+    var loader = new GLTFLoader(manager);
     loader.load(modelPath + modelName + '.glb', function (gltf) {
         obj = gltf.scene;
         obj.name = modelName;
@@ -382,15 +433,9 @@ function unMuted() {
 
     // Lógica para mutar/desmutar os sons
     if (isMuted) {
-        // Mute todos os sons
-        // Exemplo: som1.mute();
-        //         som2.mute();
-        //         som3.mute();
+        audio.pause();
     } else {
-        // Desmute todos os sons
-        // Exemplo: som1.unmute();
-        //         som2.unmute();
-        //         som3.unmute();
+        audio.play();
     }
 }
 function onKeyPress(event) {
@@ -429,6 +474,7 @@ function onClick(event) {
 
     tiro.userData = {};
     tiro.userData.initialPosition = new THREE.Vector3().copy(tiro.position);
+    tiroSound.play();
 }
 
 function createBBHelper(bb, color) {
@@ -522,7 +568,7 @@ function CriarTrincheiras(numTrincheiras) {
                     objects.push(cuboClone);
                 }
                 if (j % 2 == 0) {
-                    loadGLBFile('./objeto/', 'torreta', true, 50);
+                    loadGLBFile('./objeto/', 'torreta', true, 50,loadingManager);
                 }
             }
             //lateral esquerda
@@ -610,4 +656,27 @@ function animateExplosion(object) {
 
     // Inicie a animação
     requestAnimationFrame(explosionAnimation);
+}
+function onButtonPressed() {
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.transition = 0;
+    loadingScreen.classList.add('fade-out');
+    loadingScreen.addEventListener('transitionend', (e) => {
+        const element = e.target;
+        element.remove();
+    });
+    // Config and play the loaded audio
+    let sound = new THREE.Audio(new THREE.AudioListener());
+    audioLoader.load("./sounds/game-start.mp3", function (buffer) {
+        sound.setBuffer(buffer);
+        //sound.setLoop(true);
+        sound.play();
+    });
+    som.play();
+    document.body.style.cursor = 'none';
+}
+function loadAudio(manager, audio) {
+    // Create ambient sound
+    audioLoader = new THREE.AudioLoader(manager);
+    audioPath = audio;
 }
