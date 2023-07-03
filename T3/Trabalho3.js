@@ -1,27 +1,29 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../build/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-import { IcosahedronBufferGeometry, Vector3 } from '../build/three.module.js';
+import { DoubleSide, Vector3 } from '../build/three.module.js';
 import {
     initRenderer,
-    initCamera,
-    initDefaultBasicLight,
-    setDefaultMaterial,
-    createLightSphere,
     onWindowResize,
     getMaxSize
 } from "../libs/util/util.js";
-import { Arvore } from './Arvore.js';
 
 let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
 let isActive = true;
 let isCursorVisible = false;
+let isMuted = false;
 var lerpConfig;
-let isShooting = false;
+let numTirosLevados = 0;
+const colors = [
+    new THREE.Color(1, 1, 1),          // Branco
+    new THREE.Color(1, 0.8, 0.8),      // Tom avermelhado mais claro
+    new THREE.Color(1, 0.6, 0.6),      // Tom avermelhado médio
+    new THREE.Color(1, 0.4, 0.4),      // Tom avermelhado mais escuro
+    new THREE.Color(1, 0, 0)           // Vermelho completo
+];
 let tiros = [];
 let tirosHB = [];
-let tirosHBHelper = [];
 //explosao
 let explosion = {
     textures: [],
@@ -65,7 +67,9 @@ let explosion = {
         }
     },
 }
-document.body.style.cursor = 'none';
+let audioLoader, audioPath;
+let torretas = [];
+let hbtorretas = [];
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
 //camera
@@ -79,7 +83,7 @@ let cameraHolder = new THREE.Object3D();
 cameraHolder.add(camera);
 scene.add(cameraHolder);
 
-orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
+//orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 const tamanhoPlano = 100;
 //posiçao aviao
 const posicaoAviao = new Vector3(0.0, 10.0, 0.0);
@@ -121,6 +125,7 @@ let assetManager = {
         this.aviao.visible = this.torreta = false;
     }
 }
+//orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 
 //Luz
 const ambientColor = "rgb(50,50,50)";
@@ -129,6 +134,24 @@ scene.add(ambientLight);
 let lightPosition = new THREE.Vector3(70, 90, 0);
 let lightColor = "rgb(255,255,255)";
 let dirLight = new THREE.DirectionalLight(lightColor);
+
+
+const loadingManager = new THREE.LoadingManager(() => {
+    let loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.transition = 0;
+    loadingScreen.style.setProperty('--speed1', '0');
+    loadingScreen.style.setProperty('--speed2', '0');
+    loadingScreen.style.setProperty('--speed3', '0');
+
+    let button = document.getElementById("myBtn")
+    button.style.backgroundColor = 'Red';
+    button.innerHTML = 'Start';
+    button.addEventListener("click", onButtonPressed);
+});
+
+loadAudio(loadingManager, './sounds/game-start.mp3');
+
+
 
 //criando target
 const materialtarget = new THREE.MeshBasicMaterial({ color: 'lightgreen', visible: false });
@@ -148,7 +171,7 @@ const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
 //scene.add(shadowHelper);
 
 //Criando aviao
-loadGLBFile('./objeto/', 'aviao', true, 13.0);
+loadGLBFile('./objeto/', 'aviao', true, 13.0, loadingManager);
 
 //cria Mira
 const tamanhoPequeno = 1.5;
@@ -198,12 +221,24 @@ var lerpConfig = {
     alpha: 0.05,
     move: true
 }
+//Skybox
+const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
+skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
+skyboxTexture.encoding = THREE.sRGBEncoding;
+const skyboxSize = new THREE.Vector3();
+const skyboxGeometry = new THREE.BoxGeometry(window.innerWidth, window.innerHeight, window.innerWidth);
+skyboxGeometry.computeBoundingBox();
+skyboxGeometry.boundingBox.getSize(skyboxSize);
+const skyboxMaterial = new THREE.MeshBasicMaterial(
+    {
+        map: skyboxTexture,
+        side: DoubleSide
+    });
+const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+skybox.scale.x = -1;
+scene.background = skyboxTexture;
+//scene.add(skybox);
 
-var lerpConfigTiro = {
-    destination: new THREE.Vector3(0.0, 0.2, 0.0),
-    alpha: 0.5,
-    move: true
-}
 
 //Plano
 var ground = new THREE.TextureLoader().load("./Textures/death-star-texture ground.jpg");
@@ -235,83 +270,41 @@ function onMouseMove(event) {
 
 const objects = [];
 CriarTrincheiras(5);
-// window.addEventListener('mousedown', function () {
-//     const objectExist = objects.find(function (object) {
-//         return (object.position.x === assetManager.aviao.position.x) &&
-//             (object.position.z === assetManager.aviao.position.z)
-//     });
-//     if (!objectExist) {
-//         intersects.forEach(function (intersect) {
-//             var cuboClone;
-//             var cuboCloneLateral;
-//             for (let k = 0; k < 5; k++) {
-//                 if (k == 0) {
-//                     //centro
-//                     for (let j = 0; j < 5; j++) {
-//                         for (let i = 0; i < 5; i++) {
-//                             cuboClone = cubo.clone();
-//                             cuboClone.position.set(-inicio + (i * 20), -10, fim - (j * 20));
-//                             scene.add(cuboClone);
-//                             objects.push(cuboClone);
-//                         }
-//                         if (j % 2 == 0) {
-//                             loadGLBFile('./objeto/', 'torreta', true, 5);
-//                         }
-//                     }
-//                     //lateral esquerda
-//                     for (let l = 0; l < 5; l++) {
-//                         for (let m = 0; m < 3; m++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(-60, -10 + (m * 20), fim - (l * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                     //lateral direita
-//                     for (let n = 0; n < 5; n++) {
-//                         for (let o = 0; o < 3; o++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                 }
-//                 else {
-//                     //centro
-//                     for (let j = 0; j < 5; j++) {
-//                         for (let i = 0; i < 5; i++) {
-//                             cuboClone = cubo.clone();
-//                             cuboClone.position.set(-inicio + (i * 20), -10, (-k * fim) - (j * 20));
-//                             scene.add(cuboClone);
-//                             objects.push(cuboClone);
 
-//                         }
-//                     }
+// //----------------------------------------------------------------------------
+//-- AUDIO STUFF -------------------------------------------------------------
 
-//                     //plano lateral esquerda
-//                     for (let l = 0; l < 5; l++) {
-//                         for (let m = 0; m < 3; m++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(-60, -10 + (m * 20), (-k * fim) - (l * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                     //lateral direita
-//                     for (let n = 0; n < 5; n++) {
-//                         for (let o = 0; o < 3; o++) {
-//                             cuboCloneLateral = cubo.clone();
-//                             cuboCloneLateral.position.set(60, -10 + (o * 20), (-k * fim) - (n * 20));
-//                             scene.add(cuboCloneLateral);
-//                             objects.push(cuboCloneLateral);
-//                         }
-//                     }
-//                 }
-//             }
-//         });
-//     }
-// });
+//-------------------------------------------------------
+// Create a listener and add it to que camera
+var firstPlay = true;
+var listener = new THREE.AudioListener();
+camera.add(listener);
+
+// create a global audio source
+const som = new THREE.Audio(listener);
+
+// Create ambient sound
+var audio = new THREE.AudioLoader();
+audio.load('./sounds/ambiente.mp3', function (buffer) {
+    som.setBuffer(buffer);
+    som.setLoop(true);
+    som.setVolume(0.5);
+    //sound.play(); // Will play when start button is pressed
+});
+
+
+
+//-- Create tiro sound ---------------------------------------------------       
+const tiroSound = new THREE.PositionalAudio(listener);
+audioLoader.load('./sounds/tiroaviao.mp3', function (buffer) {
+    tiroSound.setBuffer(buffer);
+    //tiroSound.setLoop(true);
+    //sound1.play(); // Will play when start button is pressed
+}); // Will be added to the target object
+
+//-- END OF AUDIO STUFF -------------------------------------------------------
+
+// Create the loading manager
 
 
 
@@ -319,9 +312,8 @@ CriarTrincheiras(5);
 window.addEventListener('resize', function () { onWindowResize(camera, renderer) }, false);
 window.addEventListener('keydown', onKeyPress, false);
 window.addEventListener('mousemove', onMouseMove, false);
-window.addEventListener('contextmenu', onRightClick, false);
-var TextureLoader = new THREE.TextureLoader();
-var velocidade = 0.1;
+window.addEventListener('click', onClick, false);
+var velocidade = 0.0;
 
 //RENDER
 render();
@@ -333,19 +325,13 @@ function render() {
         updateAsset();
         UpdateProjetil();
         renderer.render(scene, camera) // Render scene
-        if (assetManager.torreta) {
-            let colisao = assetManager.hbTorreta.intersectsBox(assetManager.torreta)
-            if (colisao) {
-                scene.remove(assetManager.torreta);
-            }
-        }
     }
 }
 
 //funçoes
 function CriarPlano(scene, tamanhoPlano) {
     const planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano+4),
+        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano + 4),
         new THREE.MeshLambertMaterial({
             side: THREE.DoubleSide,
             visible: false
@@ -378,8 +364,8 @@ function setDirectionalLighting(position) {
 }
 
 //LoadGLB
-function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
-    var loader = new GLTFLoader();
+function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
+    var loader = new GLTFLoader(manager);
     loader.load(modelPath + modelName + '.glb', function (gltf) {
         obj = gltf.scene;
         obj.name = modelName;
@@ -400,7 +386,7 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.rotateY(3.13);
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
-            assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
+            assetManager.hbAviao.setFromObject(obj);
             var aviaoHelper = createBBHelper(assetManager.hbAviao, 'white')
         }
         if (obj.name == 'torreta') {
@@ -408,7 +394,8 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
             obj.userData.collidable = true;
             obj.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5, THREE.MathUtils.randFloat(-500, 45))
             assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
-            var torretaHelper = createBBHelper(assetManager.hbTorreta, 'white')
+            torretas.push(obj);
+            hbtorretas.push(new THREE.Box3().setFromObject(obj));
         }
 
         obj.receiveShadow = true;
@@ -442,11 +429,16 @@ function toggleSimulation() {
     isCursorVisible = !isCursorVisible;
     document.body.style.cursor = isCursorVisible ? 'auto' : 'none';
 }
+function unMuted() {
+    isMuted = !isMuted;
 
-function trilhaSonora(){
-    isActive = !isActive;
+    // Lógica para mutar/desmutar os sons
+    if (isMuted) {
+        audio.pause();
+    } else {
+        audio.play();
+    }
 }
-
 function onKeyPress(event) {
     if (event.code === 'Escape') {
         toggleSimulation();
@@ -463,10 +455,13 @@ function onKeyPress(event) {
     if (event.code === 'Digit3') {
         velocidade = 1;
     }
+    if (event.code === 'S') {
+        unMuted();
+    }
 }
 
 
-function onRightClick(event) {
+function onClick(event) {
     let tiro = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 4), new THREE.MeshPhongMaterial({ color: 'blue' }));
     tiro.castShadow = true;
     tiro.receiveShadow = true;
@@ -483,6 +478,7 @@ function onRightClick(event) {
 
     tiro.userData = {};
     tiro.userData.initialPosition = new THREE.Vector3().copy(tiro.position);
+    tiroSound.play();
 }
 
 function createBBHelper(bb, color) {
@@ -511,6 +507,7 @@ function updateAsset() {
         targetLuz.position.z -= velocidade;
         dirLight.position.z -= velocidade;
         smallSquare.position.z -= velocidade;
+        skybox.position.copy(assetManager.aviao.position).sub(skyboxSize.multiplyScalar(0.5))
     }
 }
 
@@ -533,22 +530,36 @@ function UpdateProjetil() {
     }
 }
 function checkCollisions(bala) {
-    let collision = assetManager.hbTorreta.intersectsBox(bala);
-    if (collision) {
-        assetManager.torreta.traverse(function (node) {
-            if (node.material) {
-                explosion.build(); // Build explosion object
-                explosion.play = true; // Execute on start
-                node.material.opacity = 0;
+    if (bala != null && torretas != null) {
+        let collision;
+        let i;
+        for (i = 0; i < hbtorretas.length; i++) {
+            if (torretas[i] != null) {
+                collision = hbtorretas[i].intersectsBox(bala);
+                if (collision) {
+                    torretas[i].traverse(function (node) {
+                        if (node.material) {
+                            console.log("Colidiu com a bala");
+                            explosion.build();
+                            animateExplosion(torretas[i]);
+                            scene.remove(torretas[i]); // Remova o objeto da cena
+                            torretas.splice(i, 1);
+                            hbtorretas.splice(i, 1);
+                        }
+                    });
+                }
             }
-        });
+        }
     }
 }
-function changeObjectColor(color) {
-    if (assetManager.aviao) {
+function changeObjectColor() {
+    if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
             if (child.material)
-                child.material.color.set(assetManager.aviao.material.color - (0, 83.3, 83.3));
+                if (numTirosLevados < 5) {
+                    numTirosLevados++;
+                }
+            child.material.color.set(colors[numTirosLevados]);
         });
     }
 }
@@ -567,7 +578,7 @@ function CriarTrincheiras(numTrincheiras) {
                     objects.push(cuboClone);
                 }
                 if (j % 2 == 0) {
-                    loadGLBFile('./objeto/', 'torreta', true, 5);
+                    loadGLBFile('./objeto/', 'torreta', true, 50,loadingManager);
                 }
             }
             //lateral esquerda
@@ -621,4 +632,61 @@ function CriarTrincheiras(numTrincheiras) {
             }
         }
     }
+}
+function animateExplosion(object) {
+    const initialScale = object.scale.clone();
+
+    // Exiba a explosão
+    explosion.play();
+
+    const duration = 500; // Duração da animação em milissegundos
+    let startTime = null;
+
+    function explosionAnimation(timestamp) {
+        if (!startTime) startTime = timestamp;
+
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1); // Progresso da animação (entre 0 e 1)
+
+        // Ajuste a escala do objeto
+        object.scale.set(
+            initialScale.x * (1 + progress),
+            initialScale.y * (1 + progress),
+            initialScale.z * (1 + progress)
+        );
+
+        if (progress < 1) {
+            // Continue a animação
+            requestAnimationFrame(explosionAnimation);
+        } else {
+            // Remova o objeto da cena
+            scene.remove(object);
+        }
+    }
+
+    // Inicie a animação
+    requestAnimationFrame(explosionAnimation);
+}
+function onButtonPressed() {
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.transition = 0;
+    loadingScreen.classList.add('fade-out');
+    loadingScreen.addEventListener('transitionend', (e) => {
+        const element = e.target;
+        element.remove();
+    });
+    // Config and play the loaded audio
+    let sound = new THREE.Audio(new THREE.AudioListener());
+    audioLoader.load("./sounds/game-start.mp3", function (buffer) {
+        sound.setBuffer(buffer);
+        //sound.setLoop(true);
+        sound.play();
+    });
+    som.play();
+    document.body.style.cursor = 'none';
+}
+function loadAudio(manager, audio) {
+    // Create ambient sound
+    audioLoader = new THREE.AudioLoader(manager);
+    audioPath = audio;
 }
