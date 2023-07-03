@@ -203,6 +203,7 @@ var lerpConfig = {
 //Skybox
 const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
     skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
+    skyboxTexture.encoding = THREE.sRGBEncoding;
 const skyboxSize = new THREE.Vector3();
 const skyboxGeometry = new THREE.BoxGeometry(window.innerWidth, window.innerHeight, window.innerWidth);
 skyboxGeometry.computeBoundingBox();
@@ -214,7 +215,8 @@ const skyboxMaterial = new THREE.MeshBasicMaterial(
     });
 const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 skybox.scale.x = -1;
-scene.add(skybox);
+scene.background = skyboxTexture;
+//scene.add(skybox);
 
 
 //Plano
