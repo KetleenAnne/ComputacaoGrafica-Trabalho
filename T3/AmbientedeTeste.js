@@ -122,6 +122,38 @@ let assetManager = {
     }
 }
 
+// ---------------------TRILHA SONORA-----------------------//
+var firstPlay = true;
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+// Musica ambiente
+const sound = new THREE.Audio( listener );  
+let audioLoader = new THREE.AudioLoader(); //./objeto/', 'aviao'
+
+audioLoader.load( './sounds/ambiente.mp3', function( buffer ) {
+	sound.setBuffer( buffer );
+	sound.setLoop( true );
+	sound.setVolume( 0.5 );
+});
+
+// Tiro aviao
+const tiroAviao = new THREE.PositionalAudio( listener );
+audioLoader.load( './sounds/tiroaviao.mp3', function ( buffer ) {
+  tiroAviao.setBuffer( buffer );
+  tiroAviao.setLoop( false );
+} );
+
+// Tiro torreta
+const tiroTorreta = new THREE.PositionalAudio( listener );
+audioLoader.load( './sounds/tirotorreta.mp3', function ( buffer ) {
+    tiroTorreta.setBuffer( buffer );
+    tiroTorreta.setLoop( false );
+} );
+
+// Colisao
+const colisao = new THREE.PositionalAudio( listener );
+
 //Luz
 const ambientColor = "rgb(50,50,50)";
 let ambientLight = new THREE.AmbientLight(ambientColor);
@@ -333,7 +365,8 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
         var obj = fixPosition(obj);
         obj.updateMatrixWorld(true);
         if (obj.name == 'aviao') {
-            obj.rotateY(3.13);
+            //obj.rotateY(3.13);
+            obj.rotateY(THREE.MathUtils.degToRad(-180));
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
@@ -432,6 +465,7 @@ function updateAsset()
 {
    if(assetManager.allLoaded)
    {
+    // ---------------------MOVIMENTO AVIAO-----------------------//
         //config da camera subir e descer
         rotateAviao();
         
@@ -442,7 +476,7 @@ function updateAsset()
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha*2);
         }
 
-        //assetManager.hbAviao.setFromObject(assetManager.aviao);
+        assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         cameraHolder.position.z -= velocidade;
         targetLuz.position.z -= velocidade;
@@ -490,6 +524,7 @@ function changeObjectColor(color) {
     }
 }
 
+// ---------------------MOVIMENTO AVIAO-----------------------//
 function rotateAviao(){
     let aviao = assetManager.aviao;
     
@@ -504,13 +539,13 @@ function rotateAviao(){
     if(distancia > 45){
         distancia =  45;
     }
-    
+
     quaternionZ = new THREE.Quaternion();
     quaternionX = new THREE.Quaternion();
     quaternionY = new THREE.Quaternion();
     quaternionZ.setFromAxisAngle(new THREE.Vector3(0, 0, -1), (Math.PI * (distancia / 25)) / -8);
-    quaternionX.setFromAxisAngle(new THREE.Vector3(-1, 0, 0), (Math.PI * (distancia/ 35)) / -8);
-    quaternionY.setFromAxisAngle(new THREE.Vector3(0, -1, 0), (Math.PI * (distancia/ 35)) / -8 )
+    quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), (Math.PI * (distancia/ 35)) / -8);
+    quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), (Math.PI * (distancia/ 35)) / -8 )
 
     aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
     aviao.quaternion.slerp(quaternionZ, 0.015);
@@ -520,6 +555,8 @@ function rotateAviao(){
     aviao.position.z -= velocidade;
 
 }
+
+// ---------------------MOVIMENTO AVIAO-----------------------//
 function CriarTrincheiras(numTrincheiras) {
     var cuboClone;
     var cuboCloneLateral;
