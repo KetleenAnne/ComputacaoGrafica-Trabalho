@@ -14,8 +14,13 @@ import {
 import { Arvore } from './Arvore.js';
 
 let scene, renderer, camera, orbit; // Initial variables
+// -------- AVIAO --------//
+let quaternionZ;
+
+// -------- AVIAO --------//
 let isPaused = false;
 let playMusic = true;
+let vira = 0;
 let isCursorVisible = false;
 var lerpConfig;
 let isShooting = false;
@@ -227,7 +232,7 @@ smallSquare.move = true;
 scene.add(smallSquare);
 
 var lerpConfig = {
-    destination: new THREE.Vector3(0.0, 0.2, 0.0),
+    destination: new THREE.Vector3(0.0, 0.2, -0.1),
     alpha: 0.05,
     move: true
 }
@@ -366,7 +371,7 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale) {
         obj.updateMatrixWorld(true);
         if (obj.name == 'aviao') {
             //obj.rotateY(3.13);
-            obj.rotateY(THREE.MathUtils.degToRad(-180));
+            obj.rotateY(THREE.MathUtils.degToRad(180));
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao = new THREE.Box3().setFromObject(obj);
@@ -467,7 +472,9 @@ function updateAsset()
    {
     // ---------------------MOVIMENTO AVIAO-----------------------//
         //config da camera subir e descer
-        rotateAviao();
+        
+        let distancia = (mousePosition.x - assetManager.aviao.position.x );
+        rotateAviao(distancia);
         
         if(assetManager.aviao.position.y > 50){
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha/2);
@@ -475,6 +482,7 @@ function updateAsset()
         if(assetManager.aviao.position.y < 50){
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha*2);
         }
+        assetManager.aviao.position.lerp(lerpConfig.destination, 0.035);
 
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
@@ -525,35 +533,32 @@ function changeObjectColor(color) {
 }
 
 // ---------------------MOVIMENTO AVIAO-----------------------//
-function rotateAviao(){
-    let aviao = assetManager.aviao;
-    
-    let quaternionZ;
-    let quaternionX;
-    let quaternionY;
-    let distancia = (aviao.position.x - mousePosition.x);
+function rotateAviao(distancia){
 
-    if(distancia < -45){
-        distancia = -45;
+    if(vira % 300 === 0 && assetManager.aviao.posicaoAviao === smallSquare.position){
+        assetManager.aviao.rotateZ(distancia/100);
+        vira = false;
     }
-    if(distancia > 45){
-        distancia =  45;
+    else{
+        assetManager.aviao.rotateZ(distancia/-100);
+        vira += 1;    
+        assetManager.aviao.lookAt(smallSquare.position); 
     }
+     assetManager.aviao.position.z -= velocidade;
 
-    quaternionZ = new THREE.Quaternion();
-    quaternionX = new THREE.Quaternion();
-    quaternionY = new THREE.Quaternion();
-    quaternionZ.setFromAxisAngle(new THREE.Vector3(0, 0, -1), (Math.PI * (distancia / 25)) / -8);
-    quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), (Math.PI * (distancia/ 35)) / -8);
-    quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), (Math.PI * (distancia/ 35)) / -8 )
+}
 
-    aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
-    aviao.quaternion.slerp(quaternionZ, 0.015);
-    aviao.quaternion.slerp(quaternionX, 0.015);
-    aviao.quaternion.slerp(quaternionY, 0.015);
+function rad(distancia) {
+    const maxAngulo = Math.PI * 65 / 180; // Converter 65 graus para radianos;
+    const limiteDistancia = 45.0; // Limite máximo de distância
 
-    aviao.position.z -= velocidade;
+    // Limitar a distância dentro do intervalo de -45 a 45
+    distancia = Math.max(-limiteDistancia, Math.min(distancia, limiteDistancia));
 
+    // Calcular o ângulo com base na distância
+    const angulo = (distancia / limiteDistancia) * maxAngulo;
+
+    return angulo;
 }
 
 // ---------------------MOVIMENTO AVIAO-----------------------//
