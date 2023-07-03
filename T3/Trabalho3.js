@@ -11,6 +11,7 @@ import {
 let scene, renderer, camera, orbit; // Initial variables
 let isPaused = false;
 let isCursorVisible = false;
+let isMuted = false;
 var lerpConfig;
 let numTirosLevados = 0;
 const colors = [
@@ -19,7 +20,7 @@ const colors = [
     new THREE.Color(1, 0.6, 0.6),      // Tom avermelhado médio
     new THREE.Color(1, 0.4, 0.4),      // Tom avermelhado mais escuro
     new THREE.Color(1, 0, 0)           // Vermelho completo
-  ];
+];
 let tiros = [];
 let tirosHB = [];
 //explosao
@@ -65,6 +66,7 @@ let explosion = {
         }
     },
 }
+
 document.body.style.cursor = 'none';
 let torretas = [];
 let hbtorretas = [];
@@ -123,6 +125,7 @@ let assetManager = {
         this.aviao.visible = this.torreta = false;
     }
 }
+//orbit = new OrbitControls(camera, renderer.domElement); // Enable mouse rotation, pan, zoom etc.
 
 //Luz
 const ambientColor = "rgb(50,50,50)";
@@ -202,8 +205,8 @@ var lerpConfig = {
 }
 //Skybox
 const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
-    skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
-    skyboxTexture.encoding = THREE.sRGBEncoding;
+skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
+skyboxTexture.encoding = THREE.sRGBEncoding;
 const skyboxSize = new THREE.Vector3();
 const skyboxGeometry = new THREE.BoxGeometry(window.innerWidth, window.innerHeight, window.innerWidth);
 skyboxGeometry.computeBoundingBox();
@@ -374,7 +377,22 @@ function toggleSimulation() {
     isCursorVisible = !isCursorVisible;
     document.body.style.cursor = isCursorVisible ? 'auto' : 'none';
 }
+function unMuted() {
+    isMuted = !isMuted;
 
+    // Lógica para mutar/desmutar os sons
+    if (isMuted) {
+        // Mute todos os sons
+        // Exemplo: som1.mute();
+        //         som2.mute();
+        //         som3.mute();
+    } else {
+        // Desmute todos os sons
+        // Exemplo: som1.unmute();
+        //         som2.unmute();
+        //         som3.unmute();
+    }
+}
 function onKeyPress(event) {
     if (event.code === 'Escape') {
         toggleSimulation();
@@ -387,6 +405,9 @@ function onKeyPress(event) {
     }
     if (event.code === 'Digit3') {
         velocidade = 1;
+    }
+    if (event.code === 'S') {
+        unMuted();
     }
 }
 
@@ -454,35 +475,35 @@ function UpdateProjetil() {
 }
 function checkCollisions(bala) {
     if (bala != null && torretas != null) {
-      let collision;
-      let i;
-      for (i = 0; i < hbtorretas.length; i++) {
-        if (torretas[i] != null) {
-          collision = hbtorretas[i].intersectsBox(bala);
-          if (collision) {
-            torretas[i].traverse(function(node) {
-              if (node.material) {
-                console.log("Colidiu com a bala");
-                explosion.build();
-                animateExplosion(torretas[i]);
-                scene.remove(torretas[i]); // Remova o objeto da cena
-                torretas.splice(i, 1);
-                hbtorretas.splice(i, 1);
-              }
-            });
-          }
+        let collision;
+        let i;
+        for (i = 0; i < hbtorretas.length; i++) {
+            if (torretas[i] != null) {
+                collision = hbtorretas[i].intersectsBox(bala);
+                if (collision) {
+                    torretas[i].traverse(function (node) {
+                        if (node.material) {
+                            console.log("Colidiu com a bala");
+                            explosion.build();
+                            animateExplosion(torretas[i]);
+                            scene.remove(torretas[i]); // Remova o objeto da cena
+                            torretas.splice(i, 1);
+                            hbtorretas.splice(i, 1);
+                        }
+                    });
+                }
+            }
         }
-      }
     }
-  }
+}
 function changeObjectColor() {
     if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
             if (child.material)
-                if(numTirosLevados<5){
+                if (numTirosLevados < 5) {
                     numTirosLevados++;
                 }
-                child.material.color.set(colors[numTirosLevados]);
+            child.material.color.set(colors[numTirosLevados]);
         });
     }
 }
@@ -558,35 +579,35 @@ function CriarTrincheiras(numTrincheiras) {
 }
 function animateExplosion(object) {
     const initialScale = object.scale.clone();
-  
+
     // Exiba a explosão
     explosion.play();
-  
+
     const duration = 500; // Duração da animação em milissegundos
     let startTime = null;
-  
+
     function explosionAnimation(timestamp) {
-      if (!startTime) startTime = timestamp;
-  
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1); // Progresso da animação (entre 0 e 1)
-  
-      // Ajuste a escala do objeto
-      object.scale.set(
-        initialScale.x * (1 + progress),
-        initialScale.y * (1 + progress),
-        initialScale.z * (1 + progress)
-      );
-  
-      if (progress < 1) {
-        // Continue a animação
-        requestAnimationFrame(explosionAnimation);
-      } else {
-        // Remova o objeto da cena
-        scene.remove(object);
-      }
+        if (!startTime) startTime = timestamp;
+
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1); // Progresso da animação (entre 0 e 1)
+
+        // Ajuste a escala do objeto
+        object.scale.set(
+            initialScale.x * (1 + progress),
+            initialScale.y * (1 + progress),
+            initialScale.z * (1 + progress)
+        );
+
+        if (progress < 1) {
+            // Continue a animação
+            requestAnimationFrame(explosionAnimation);
+        } else {
+            // Remova o objeto da cena
+            scene.remove(object);
+        }
     }
-  
+
     // Inicie a animação
     requestAnimationFrame(explosionAnimation);
-  }
+}
