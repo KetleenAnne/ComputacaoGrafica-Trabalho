@@ -9,6 +9,8 @@ import {
 } from "../libs/util/util.js";
 
 let scene, renderer, camera, orbit; // Initial variables
+let vira; //rotationZ
+let angle;
 let isPaused = false;
 let isActive = true;
 let isCursorVisible = false;
@@ -322,8 +324,12 @@ function render() {
     if (!isPaused) {
         explosion.animate();
         assetManager.checkLoaded();
+        let angle = (mousePosition.x - assetManager.aviao.position.x )/-80;
+        rotateAviao(angle);
         updateAsset();
         UpdateProjetil();
+        desrotateAviao(angle/2);
+        
         renderer.render(scene, camera) // Render scene
     }
 }
@@ -383,7 +389,7 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
         var obj = fixPosition(obj);
         obj.updateMatrixWorld(true);
         if (obj.name == 'aviao') {
-            obj.rotateY(3.13);
+           // obj.rotateY(3.13);
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao.setFromObject(obj);
@@ -491,16 +497,15 @@ function createBBHelper(bb, color) {
 function updateAsset() {
     if (assetManager.allLoaded) {
 
-        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
-
-        if (assetManager.aviao.position.y > 10) {
+        if (assetManager.aviao.position.y > 15) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 2);
         }
-        if(assetManager.aviao.position.y < 10){
+        if(assetManager.aviao.position.y < 25){
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha * 2);
         }
 
-        assetManager.aviao.position.z -= velocidade;
+        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         cameraHolder.position.z -= velocidade;
@@ -552,6 +557,19 @@ function checkCollisions(bala) {
         }
     }
 }
+
+// ---------------------MOVIMENTO AVIAO-----------------------//
+function rotateAviao(angle){
+
+    assetManager.aviao.lookAt(smallSquare.position); 
+    assetManager.aviao.rotateZ(angle);  
+    assetManager.aviao.position.z -= velocidade;
+}
+
+ function desrotateAviao(angle){
+    assetManager.aviao.rotateZ(-1 * angle);  
+}
+
 function changeObjectColor() {
     if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
@@ -684,6 +702,7 @@ function onButtonPressed() {
     });
     som.play();
     document.body.style.cursor = 'none';
+    vira = 1;
 }
 function loadAudio(manager, audio) {
     // Create ambient sound

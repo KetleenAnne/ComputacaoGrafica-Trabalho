@@ -536,14 +536,15 @@ function changeObjectColor(color) {
 function rotateAviao(distancia){
 
     if(vira % 300 === 0 && assetManager.aviao.posicaoAviao === smallSquare.position){
-        assetManager.aviao.rotateZ(distancia/100);
-        vira = false;
+        assetManager.aviao.rotateZ(distancia/-100);
+                    assetManager.aviao.lookAt(smallSquare.position); 
     }
     else{
+            assetManager.aviao.lookAt(smallSquare.position); 
         assetManager.aviao.rotateZ(distancia/-100);
         vira += 1;    
-        assetManager.aviao.lookAt(smallSquare.position); 
     }
+    
      assetManager.aviao.position.z -= velocidade;
 
 }
