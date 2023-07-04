@@ -324,12 +324,8 @@ function render() {
     if (!isPaused) {
         explosion.animate();
         assetManager.checkLoaded();
-        let angle = (mousePosition.x - assetManager.aviao.position.x )/-80;
-        rotateAviao(angle);
         updateAsset();
         UpdateProjetil();
-        desrotateAviao(angle/2);
-        
         renderer.render(scene, camera) // Render scene
     }
 }
@@ -497,15 +493,17 @@ function createBBHelper(bb, color) {
 function updateAsset() {
     if (assetManager.allLoaded) {
 
-        if (assetManager.aviao.position.y > 15) {
+
+        let distancia = (assetManager.aviao.position.x - mousePosition.x);
+        rotateAviao(distancia);
+        if (assetManager.aviao.position.y > 10) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 2);
         }
-        if(assetManager.aviao.position.y < 25){
+        if(assetManager.aviao.position.y < 10){
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha * 2);
         }
 
         assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
-
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         cameraHolder.position.z -= velocidade;
@@ -559,15 +557,20 @@ function checkCollisions(bala) {
 }
 
 // ---------------------MOVIMENTO AVIAO-----------------------//
-function rotateAviao(angle){
+function rotateAviao(distancia){
+    let angle = distancia/100;
+ 
+    if(distancia != 0){
 
-    assetManager.aviao.lookAt(smallSquare.position); 
-    assetManager.aviao.rotateZ(angle);  
-    assetManager.aviao.position.z -= velocidade;
-}
+        assetManager.aviao.lookAt(smallSquare.position); 
+        assetManager.aviao.rotateZ(angle);  
 
- function desrotateAviao(angle){
-    assetManager.aviao.rotateZ(-1 * angle);  
+    }
+    else{
+        assetManager.aviao.rotateZ(-angle);  
+    }
+
+
 }
 
 function changeObjectColor() {
