@@ -357,9 +357,6 @@ function render() {
         assetManager.checkLoaded();
         updateAsset();
         UpdateProjetil();
-        if(getDelta()%3000 == 0){
-            tiroTorretas();
-        }
         UpdateProjetilTorreta();
         renderer.render(scene, camera) // Render scene
     }
@@ -626,7 +623,7 @@ function rotateAviao(distancia){
 
 }
 
-function changeObjectColor() {
+function changeAviaoColor() {
     if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
             if (child.material)
