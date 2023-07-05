@@ -13,7 +13,14 @@ let isPaused = false;
 let isCursorVisible = false;
 let isMuted = false;
 var lerpConfig;
+var limitador = 0;
+var intervalo = 3000;
+let tirosTorreta = [];
+let tirosTorretaHB = [];
+const somadorEmZ = -500;
 let numTirosLevados = 0;
+let contadordeplanos = [];
+var vezesChamada = 0;
 const colors = [
     new THREE.Color(1, 1, 1),          // Branco
     new THREE.Color(1, 0.8, 0.8),      // Tom avermelhado mais claro
@@ -72,10 +79,10 @@ let hbtorretas = [];
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
 //camera
-let camPos = new THREE.Vector3(0.0, 30.0, 60.0);
+let camPos = new THREE.Vector3(0.0, 30.0, 70.0);
 let camUp = new THREE.Vector3(0.0, 0.0, 0.0);
 
-camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.copy(camPos);
 camera.up.copy(camUp);
 let cameraHolder = new THREE.Object3D();
@@ -100,8 +107,7 @@ raycaster.layers.enable(1);
 camera.layers.enable(0);
 camera.layers.enable(1);
 let intersects;
-var inicio = (tamanhoPlano / 2) - 10;//valor em x
-var fim = (tamanhoPlano / 2) - 10;//valor em z
+var fim = 0;//valor em z
 // Assets manager --------------------------------
 let assetManager = {
     // Properties ---------------------------------
@@ -130,7 +136,7 @@ let assetManager = {
 const ambientColor = "rgb(50,50,50)";
 let ambientLight = new THREE.AmbientLight(ambientColor);
 scene.add(ambientLight);
-let lightPosition = new THREE.Vector3(70, 90, 0);
+let lightPosition = new THREE.Vector3(70, 90, -250);
 let lightColor = "rgb(255,255,255)";
 let dirLight = new THREE.DirectionalLight(lightColor);
 
@@ -156,17 +162,18 @@ loadAudio(loadingManager, './sounds/game-start.mp3');
 const materialtarget = new THREE.MeshBasicMaterial({ color: 'lightgreen', visible: false });
 const targetGeometry = new THREE.BoxGeometry(1, 1, 1);
 const targetLuz = new THREE.Mesh(targetGeometry, materialtarget);
+targetLuz.position.set(0, 10.5, -250);
 scene.add(targetLuz);
 dirLight.target = targetLuz;
 setDirectionalLighting(lightPosition);
 // Sphere to represent the light
 //let lightSphere = createLightSphere(scene, 0.5, 10, 10, lightPosition);
 // Create helper for the spotlight
-const spotHelper = new THREE.SpotLightHelper(dirLight, 0xFF8C00);
+//const spotHelper = new THREE.SpotLightHelper(dirLight, 0xFF8C00);
 //scene.add(spotHelper);
 
 // Create helper for the dirLight shadow
-const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
+//const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera);
 //scene.add(shadowHelper);
 
 //Criando aviao
@@ -217,9 +224,18 @@ scene.add(smallSquare);
 
 var lerpConfig = {
     destination: new THREE.Vector3(0.0, 0.2, 0.0),
-    alpha: 0.05,
+    alpha: 0.2,
     move: true
 }
+//Material de cubos
+let cubeMaterials = [
+    setMaterial(null, './Textures/death star.jpg', 2, 2), //x+
+    setMaterial(null, './Textures/death star.jpg', 1, 1), //x-
+    setMaterial(null, './Textures/death star.jpg', 1, 1), //y+
+    setMaterial(null, './Textures/death star.jpg', 1, 1), //y-
+    setMaterial(null, './Textures/paredetrench.jpg', 1, 1), //z+
+    setMaterial(null, './Textures/paredetrench.jpg', 1, 1), //z-
+];
 //Skybox
 const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
 skyboxTexture.mapping = THREE.EquirectangularReflectionMapping;
@@ -240,16 +256,9 @@ scene.background = skyboxTexture;
 
 
 //Plano
-var ground = new THREE.TextureLoader().load("./Textures/death-star-texture ground.jpg");
+var ground = new THREE.TextureLoader().load("./Textures/death star.jpg");
 
-const materialcubo = new THREE.MeshLambertMaterial({
-    color: 'white',
-    side: THREE.DoubleSide,
-    map: ground
-});
-const cuboGeometry = new THREE.BoxGeometry(20, 20, 20);
-const cubo = new THREE.Mesh(cuboGeometry, materialcubo);
-cubo.receiveShadow = true;
+let materialcubo;
 
 //movimento do mouse
 function onMouseMove(event) {
@@ -262,11 +271,11 @@ function onMouseMove(event) {
 
     if (intersects.length > 0) {
         let point = intersects[0].point;
-        smallSquare.position.set(point.x, point.y, -50);
-        lerpConfig.destination.set(point.x, point.y);
+        smallSquare.position.set(point.x, point.y, point.z);
+        lerpConfig.destination.set(point.x, point.y, point.z + 100);
     }
 };
-
+//criando trincheira
 const objects = [];
 CriarTrincheiras(5);
 
@@ -275,7 +284,6 @@ CriarTrincheiras(5);
 
 //-------------------------------------------------------
 // Create a listener and add it to que camera
-var firstPlay = true;
 var listener = new THREE.AudioListener();
 camera.add(listener);
 
@@ -287,24 +295,46 @@ var audio = new THREE.AudioLoader();
 audio.load('./sounds/ambiente.mp3', function (buffer) {
     som.setBuffer(buffer);
     som.setLoop(true);
-    som.setVolume(0.5);
+    som.setVolume(0.1);
     //sound.play(); // Will play when start button is pressed
 });
 
-
-
-//-- Create tiro sound ---------------------------------------------------       
-const tiroSound = new THREE.PositionalAudio(listener);
-audioLoader.load('./sounds/tiroaviao.mp3', function (buffer) {
-    tiroSound.setBuffer(buffer);
-    //tiroSound.setLoop(true);
+//-- Create colisao sound ---------------------------------------------------       
+const colisaoAviaoSound = new THREE.Audio(listener);
+audioLoader.load('./sounds/colisaotorreta.mp3', function (buffer) {
+    colisaoAviaoSound.setBuffer(buffer);
+    colisaoAviaoSound.setLoop(false);
+    colisaoAviaoSound.setVolume(0.1);
     //sound1.play(); // Will play when start button is pressed
 }); // Will be added to the target object
 
+//-- Create colisao sound ---------------------------------------------------       
+const colisaoSound = new THREE.Audio(listener);
+audioLoader.load('./sounds/colisaotorreta.mp3', function (buffer) {
+    colisaoSound.setBuffer(buffer);
+    colisaoSound.setLoop(false);
+    colisaoSound.setVolume(0.1);
+    //sound1.play(); // Will play when start button is pressed
+}); // Will be added to the target object
+
+//-- Create tiro sound ---------------------------------------------------       
+const tiroSound = new THREE.Audio(listener);
+audioLoader.load('./sounds/tiroaviao.mp3', function (buffer) {
+    tiroSound.setBuffer(buffer);
+    tiroSound.setLoop(false);
+    tiroSound.setVolume(0.1);
+    //sound1.play(); // Will play when start button is pressed
+}); // Will be added to the target object
+
+//-- Create tiroTorreta sound ---------------------------------------------------       
+const tiroTorretaSound = new THREE.Audio(listener);
+audioLoader.load('./sounds/tirotorreta.mp3', function (buffer) {
+    tiroTorretaSound.setBuffer(buffer);
+    tiroTorretaSound.setLoop(false);
+    tiroTorretaSound.setVolume(0.1);
+    //sound1.play(); // Will play when start button is pressed
+}); // Will be added to the target object
 //-- END OF AUDIO STUFF -------------------------------------------------------
-
-// Create the loading manager
-
 
 
 // Listen window size changes
@@ -313,6 +343,7 @@ window.addEventListener('keydown', onKeyPress, false);
 window.addEventListener('mousemove', onMouseMove, false);
 window.addEventListener('click', onClick, false);
 var velocidade = 0.0;
+
 
 //RENDER
 render();
@@ -323,14 +354,22 @@ function render() {
         assetManager.checkLoaded();
         updateAsset();
         UpdateProjetil();
+        if(getDelta()%3000 == 0){
+            tiroTorretas();
+        }
+        UpdateProjetilTorreta();
         renderer.render(scene, camera) // Render scene
     }
+    else {
+        som.pause();
+    }
 }
+
 
 //funçoes
 function CriarPlano(scene, tamanhoPlano) {
     const planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano + 4),
+        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano + 8),
         new THREE.MeshLambertMaterial({
             side: THREE.DoubleSide,
             visible: false
@@ -353,8 +392,8 @@ function setDirectionalLighting(position) {
     dirLight.shadow.mapSize.height = 1024;
     dirLight.shadow.camera.near = 1;
     dirLight.shadow.camera.far = 190;
-    dirLight.shadow.camera.left = -100;
-    dirLight.shadow.camera.right = 100;
+    dirLight.shadow.camera.left = -300;
+    dirLight.shadow.camera.right = 300;
     dirLight.shadow.camera.top = 100;
     dirLight.shadow.camera.bottom = -100;
     dirLight.name = "Direction Light";
@@ -395,9 +434,9 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
             assetManager.hbTorreta = new THREE.Box3().setFromObject(obj);
             torretas.push(obj);
             hbtorretas.push(new THREE.Box3().setFromObject(obj));
+            obj.receiveShadow = true;
         }
 
-        obj.receiveShadow = true;
         obj.castShadow = true;
         assetManager[modelName] = obj;
         scene.add(obj);
@@ -433,9 +472,9 @@ function unMuted() {
 
     // Lógica para mutar/desmutar os sons
     if (isMuted) {
-        audio.pause();
+        som.pause();
     } else {
-        audio.play();
+        som.play();
     }
 }
 function onKeyPress(event) {
@@ -443,15 +482,15 @@ function onKeyPress(event) {
         toggleSimulation();
     }
     if (event.code === 'Digit1') {
-        velocidade = 0.1;
+        velocidade = 1.5;
     }
     if (event.code === 'Digit2') {
-        velocidade = 0.5;
+        velocidade = 2.5;
     }
     if (event.code === 'Digit3') {
-        velocidade = 1;
+        velocidade = 3;
     }
-    if (event.code === 'S') {
+    if (event.code === 'KeyS') {
         unMuted();
     }
 }
@@ -480,7 +519,7 @@ function onClick(event) {
 function createBBHelper(bb, color) {
     // Create a bounding box helper
     let helper = new THREE.Box3Helper(bb, color);
-    scene.add(helper);
+    //scene.add(helper);
 }
 
 
@@ -488,23 +527,35 @@ function updateAsset() {
     if (assetManager.allLoaded) {
         assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
         if (assetManager.aviao.position.y > 10) {
-            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 2);
+            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 1.5);
         }
         //assetManager.aviao.position.z -= velocidade;
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
-        cameraHolder.position.z -= velocidade;
+        //cameraHolder.position.z -= velocidade;
         targetLuz.position.z -= velocidade;
         dirLight.position.z -= velocidade;
-        smallSquare.position.z -= velocidade;
-        skybox.position.copy(assetManager.aviao.position).sub(skyboxSize.multiplyScalar(0.5))
+        //skybox.position.copy(assetManager.aviao.position).sub(skyboxSize.multiplyScalar(0.5))
+        let pos = new THREE.Vector3();
+        assetManager.aviao.getWorldPosition(pos);
+        if (pos.z <= limitador / 2) {
+            realocaPlanos();
+            if (vezesChamada != 2) {
+                vezesChamada++;
+            }
+            else {
+                vezesChamada = 0;
+            }
+            limitador = limitador - 350;
+        }
     }
 }
+
 
 function UpdateProjetil() {
     if (tiros != null) {
         tiros.forEach((b, i) => {
-            b.translateZ(2);
+            b.translateZ(velocidade * 2);
             tirosHB[i].copy(b.geometry.boundingBox).applyMatrix4(b.matrixWorld);
             tirosHB[i].setFromObject(b);
             let distancia = b.position.distanceTo(b.userData.initialPosition);
@@ -527,11 +578,13 @@ function checkCollisions(bala) {
             if (torretas[i] != null) {
                 collision = hbtorretas[i].intersectsBox(bala);
                 if (collision) {
+                    colisaoSound.play();
                     torretas[i].traverse(function (node) {
                         if (node.material) {
-                            console.log("Colidiu com a bala");
                             explosion.build();
-                            animateExplosion(torretas[i]);
+                            if (torretas[i]) {
+                                animateExplosion(torretas[i]);
+                            }
                             scene.remove(torretas[i]); // Remova o objeto da cena
                             torretas.splice(i, 1);
                             hbtorretas.splice(i, 1);
@@ -542,7 +595,7 @@ function checkCollisions(bala) {
         }
     }
 }
-function changeObjectColor() {
+function changeAviaoColor() {
     if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
             if (child.material)
@@ -558,73 +611,71 @@ function CriarTrincheiras(numTrincheiras) {
     var cuboClone;
     var cuboCloneLateral;
     for (let k = 0; k < numTrincheiras; k++) {
-        if (k == 0) {
-            //centro
-            for (let j = 0; j < 5; j++) {
-                for (let i = 0; i < 5; i++) {
-                    cuboClone = cubo.clone();
-                    cuboClone.position.set(-inicio + (i * 20), -10, fim - (j * 20));
-                    scene.add(cuboClone);
-                    objects.push(cuboClone);
-                }
-                if (j % 2 == 0) {
-                    loadGLBFile('./objeto/', 'torreta', true, 50,loadingManager);
-                }
-            }
-            //lateral esquerda
-            for (let l = 0; l < 5; l++) {
-                for (let m = 0; m < 3; m++) {
-                    cuboCloneLateral = cubo.clone();
-                    cuboCloneLateral.position.set(-60, -10 + (m * 20), fim - (l * 20));
-                    scene.add(cuboCloneLateral);
-                    objects.push(cuboCloneLateral);
-                }
-            }
-            //lateral direita
-            for (let n = 0; n < 5; n++) {
-                for (let o = 0; o < 3; o++) {
-                    cuboCloneLateral = cubo.clone();
-                    cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
-                    scene.add(cuboCloneLateral);
-                    objects.push(cuboCloneLateral);
-                }
+        var grupo = new THREE.Group();
+        //centro
+        for (let j = 0; j < 5; j++) {
+            for (let i = 0; i < 5; i++) {
+                let cuboGeometry = new THREE.BoxGeometry(20, 20, 20);
+                cuboClone = new THREE.Mesh(cuboGeometry, cubeMaterials[1]);
+                cuboClone.receiveShadow = true;
+                cuboClone.position.set(-40 + (i * 20), -10, fim - (j * 20));
+                objects.push(cuboClone);
+                grupo.add(cuboClone);
             }
         }
-        else {
-            //centro
-            for (let j = 0; j < 5; j++) {
-                for (let i = 0; i < 5; i++) {
-                    cuboClone = cubo.clone();
-                    cuboClone.position.set(-inicio + (i * 20), -10, (-k * fim) - (j * 20));
-                    scene.add(cuboClone);
-                    objects.push(cuboClone);
+        //lateral esquerda
+        for (let l = 0; l < 5; l++) {
+            for (let m = 0; m < 3; m++) {
+                let cuboGeometry = new THREE.BoxGeometry(20, 20, 20);
+                if (m % 2 == 1) {
+                    cuboCloneLateral = new THREE.Mesh(cuboGeometry, cubeMaterials);
+                }
+                else {
+                    cuboCloneLateral = new THREE.Mesh(cuboGeometry, cubeMaterials[4]);
+                }
+                cuboCloneLateral.receiveShadow = true;
+                cuboCloneLateral.position.set(-60, -10 + (m * 20), fim - (l * 20));
+                objects.push(cuboCloneLateral);
 
-                }
-            }
-
-            //plano lateral esquerda
-            for (let l = 0; l < 5; l++) {
-                for (let m = 0; m < 3; m++) {
-                    cuboCloneLateral = cubo.clone();
-                    cuboCloneLateral.position.set(-60, -10 + (m * 20), (-k * fim) - (l * 20));
-                    scene.add(cuboCloneLateral);
-                    objects.push(cuboCloneLateral);
-                }
-            }
-            //lateral direita
-            for (let n = 0; n < 5; n++) {
-                for (let o = 0; o < 3; o++) {
-                    cuboCloneLateral = cubo.clone();
-                    cuboCloneLateral.position.set(60, -10 + (o * 20), (-k * fim) - (n * 20));
-                    scene.add(cuboCloneLateral);
-                    objects.push(cuboCloneLateral);
-                }
+                grupo.add(cuboCloneLateral);
             }
         }
+        //lateral direita
+        for (let n = 0; n < 5; n++) {
+            for (let o = 0; o < 3; o++) {
+                let cuboGeometry = new THREE.BoxGeometry(20, 20, 20);
+                if (o % 2 == 1) {
+                    cuboCloneLateral = new THREE.Mesh(cuboGeometry, cubeMaterials);
+                }
+                else {
+                    cuboCloneLateral = new THREE.Mesh(cuboGeometry, cubeMaterials[4]);
+                }
+                cuboCloneLateral.receiveShadow = true;
+                cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
+                objects.push(cuboCloneLateral);
+                grupo.add(cuboCloneLateral);
+            }
+        }
+        grupo.translateZ((limitador));
+        limitador -= 100;
+        for (let i = 0; i < 3; i++) {
+            loadGLBFile('./objeto/', 'torreta', true, 13.0, loadingManager);
+            if (assetManager.torreta) {
+                let position = getRandomPosition(grupo);
+                if (position.x < -42 || position.x > 42) {
+                    position.y = 41.5;
+                }
+                assetManager.torreta.position.copy(position);
+                torretas.push(assetManager.torreta);
+                grupo.attach(assetManager.torreta);
+            }
+        }
+        contadordeplanos.push(grupo);
+        scene.add(grupo);
     }
 }
 function animateExplosion(object) {
-    const initialScale = object.scale.clone();
+    const initialScale = object.scale;
 
     // Exiba a explosão
     explosion.play();
@@ -674,9 +725,123 @@ function onButtonPressed() {
     });
     som.play();
     document.body.style.cursor = 'none';
+    velocidade = 1.0;
 }
 function loadAudio(manager, audio) {
     // Create ambient sound
     audioLoader = new THREE.AudioLoader(manager);
     audioPath = audio;
+}
+function createCylinder(radiusTop, radiusBottom, height, radialSegments, heightSegments, openEnded, color) {
+    var geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments, heightSegments, openEnded);
+    var material;
+    if (!color)
+        material = new THREE.MeshPhongMaterial({ color: "rgb(255,0,0)" });
+    else
+        material = new THREE.MeshPhongMaterial({ color: "rgb(230,120,50)" });
+    var object = new THREE.Mesh(geometry, material);
+    object.castShadow = true;
+    return object;
+}
+function setMaterial(color, file = null, repeatU = 1, repeatV = 1) {
+    if (!color) color = 'rgb(255,255,255)';
+
+    let mat;
+    if (!file) {
+        mat = new THREE.MeshLambertMaterial({ color: color });
+        mat.receiveShadow = true;
+    } else {
+        mat = new THREE.MeshLambertMaterial({ map: new THREE.TextureLoader().load(file), color: color });
+        mat.map.wrapS = mat.map.wrapT = THREE.RepeatWrapping;
+        mat.map.minFilter = mat.map.magFilter = THREE.LinearFilter;
+        mat.map.repeat.set(repeatU, repeatV);
+        mat.receiveShadow = true;
+    }
+    return mat;
+}
+function getRandomPosition(group) {
+    const minX = -60; // Valor mínimo para a coordenada X
+    const maxX = 60; // Valor máximo para a coordenada X
+    const minY = 1.5; // Valor mínimo para a coordenada Y
+    const maxY = 1.5; // Valor máximo para a coordenada Y
+    const minZ = -100; // Valor mínimo para a coordenada Z
+    const maxZ = 100; // Valor máximo para a coordenada Z
+
+    const position = new THREE.Vector3(
+        THREE.MathUtils.randFloat(minX, maxX),
+        THREE.MathUtils.randFloat(minY, maxY),
+        THREE.MathUtils.randFloat(minZ, maxZ)
+    );
+
+    group.localToWorld(position); // Converta a posição local para a posição global
+
+    return position;
+}
+function realocaPlanos() {
+    if (vezesChamada == 0) {
+        contadordeplanos[0].translateZ(somadorEmZ);
+        contadordeplanos[1].translateZ(somadorEmZ);
+        
+    }
+    else if (vezesChamada == 1) {
+        contadordeplanos[2].translateZ(somadorEmZ);
+        contadordeplanos[3].translateZ(somadorEmZ);
+    }
+    else if (vezesChamada == 2) {
+        contadordeplanos[4].translateZ(somadorEmZ);
+    }
+}
+
+function tiroTorretas() {
+    for(let i =0; i < torretas.length; i++){
+        let tiro = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 4), new THREE.MeshPhongMaterial({ color: 'yellow' }));
+        tiro.castShadow = true;
+        tiro.receiveShadow = true;
+        let pos = new THREE.Vector3();
+        t.getWorldPosition(pos);
+        tiro.position.copy(pos);
+        let posAviao = new THREE.Vector3();
+        assetManager.aviao.getWorldPosition(pos);
+        tiro.getWorldDirection(posAviao);
+        tiro.lookAt(posAviao);
+        scene.add(tiro);
+        tiros.push(tiro);
+        let tiroHB = new THREE.Box3().setFromObject(tiro);
+        tirosHB.push(tiroHB);
+        tiro.userData = {};
+        tiro.userData.initialPosition = new THREE.Vector3().copy(tiro.position);
+        tiroTorretaSound.play();
+    };
+}
+function UpdateProjetilTorreta() {
+    if (tirosTorreta != null) {
+        tirosTorreta.forEach((b, i) => {
+            let direcao = new THREE.Vector3();
+            assetManager.aviao.getWorldDirection(direcao);
+            b.position.lerp(direcao, velocidade * 2);
+            tirosTorretaHB[i].copy(b.geometry.boundingBox).applyMatrix4(b.matrixWorld);
+            tirosTorretaHB[i].setFromObject(b);
+            let distancia = b.position.distanceTo(b.userData.initialPosition);
+            if (b.position.y < 0 || distancia > 500 || b.position.x < -45 || b.position.x > 45 || b.position.y > 100) {
+                scene.remove(b);
+                tirosTorreta.splice(i, 1);
+                tirosTorretaHB.splice(i, 1);
+
+                i--;
+            }
+            checkCollisionsAviao(tirosTorretaHB[i]);
+        })
+    }
+}
+
+function checkCollisionsAviao(bala) {
+    if (bala != null && assetManager.aviao != null) {
+        let collision;
+        let i;
+        collision = assetManager.hbAviao.intersectsBox(bala);
+        if (collision) {
+            colisaoAviaoSound.play();
+            changeAviaoColor();
+        }
+    }
 }
