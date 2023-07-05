@@ -9,7 +9,10 @@ import {
 } from "../libs/util/util.js";
 
 let scene, renderer, camera, orbit; // Initial variables
+let vira; //rotationZ
+let angle;
 let isPaused = false;
+let isActive = true;
 let isCursorVisible = false;
 let isMuted = false;
 var lerpConfig;
@@ -421,7 +424,7 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
         var obj = fixPosition(obj);
         obj.updateMatrixWorld(true);
         if (obj.name == 'aviao') {
-            obj.rotateY(3.13);
+           // obj.rotateY(3.13);
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao.setFromObject(obj);
@@ -481,6 +484,9 @@ function onKeyPress(event) {
     if (event.code === 'Escape') {
         toggleSimulation();
     }
+    if(event.code === "KeyS"){
+        trilhaSonora();
+    }
     if (event.code === 'Digit1') {
         velocidade = 1.5;
     }
@@ -525,11 +531,18 @@ function createBBHelper(bb, color) {
 
 function updateAsset() {
     if (assetManager.allLoaded) {
-        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+
+
+        let distancia = (assetManager.aviao.position.x - mousePosition.x);
+        rotateAviao(distancia);
         if (assetManager.aviao.position.y > 10) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 1.5);
         }
-        //assetManager.aviao.position.z -= velocidade;
+        if(assetManager.aviao.position.y < 10){
+            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha * 2);
+        }
+
+        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
         //cameraHolder.position.z -= velocidade;
@@ -595,7 +608,25 @@ function checkCollisions(bala) {
         }
     }
 }
-function changeAviaoColor() {
+
+// ---------------------MOVIMENTO AVIAO-----------------------//
+function rotateAviao(distancia){
+    let angle = distancia/100;
+ 
+    if(distancia != 0){
+
+        assetManager.aviao.lookAt(smallSquare.position); 
+        assetManager.aviao.rotateZ(angle);  
+
+    }
+    else{
+        assetManager.aviao.rotateZ(-angle);  
+    }
+
+
+}
+
+function changeObjectColor() {
     if (assetManager.aviao && assetManager.aviao.material) {
         assetManager.aviao.traverse(function (child) {
             if (child.material)
@@ -725,6 +756,7 @@ function onButtonPressed() {
     });
     som.play();
     document.body.style.cursor = 'none';
+    vira = 1;
     velocidade = 1.0;
 }
 function loadAudio(manager, audio) {

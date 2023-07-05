@@ -10,8 +10,6 @@ import {initRenderer,
         onWindowResize} from "../libs/util/util.js";
 
 var scene = new THREE.Scene();    // Create main scene
-var clock = new THREE.Clock();
-var stats = new Stats();          // To show FPS information
 var light = initDefaultSpotlight(scene, new THREE.Vector3(2, 4, 2)); // Use default light
 
 var renderer = initRenderer();    // View function in util/utils
@@ -20,12 +18,6 @@ var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHei
   camera.position.set(2.8, 1.8, 4.0);
   camera.up.set( 0, 1, 0 );
 
-// Control the appearence of first object loaded
-var firstRender = false;
-
-// Enable mouse rotation, pan, zoom etc.
-var trackballControls = new TrackballControls( camera, renderer.domElement );
-  trackballControls.target = new THREE.Vector3(0, 1.0, 0);
 
 // Listen window size changes
 window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)}, false );
@@ -88,13 +80,8 @@ function loadGLBFile(modelName, centerObject, sound = null)
   loader.load( modelName, function ( gltf ) {
     var obj = gltf.scene;
     obj.traverse( function ( child ) {
-      if ( child ) {
-          child.castShadow = true;
-      }
-    });
-    obj.traverse( function( node )
-    {
-      if( node.material ) node.material.side = THREE.DoubleSide;
+      if ( child.isMesh ) child.castShadow = true;
+      if ( child.material ) child.material.side = THREE.DoubleSide;
     });
 
     // Only fix the position of the windmill
