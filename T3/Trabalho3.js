@@ -240,6 +240,7 @@ let cubeMaterials = [
     setMaterial(null, './Textures/death star.jpg', 1, 1), //y-
     setMaterial(null, './Textures/paredetrench.jpg', 1, 1), //z+
     setMaterial(null, './Textures/paredetrench.jpg', 1, 1), //z-
+    setMaterial(null, './Textures/metal.jpg', 1, 1),
 ];
 //Skybox
 const skyboxTexture = new THREE.TextureLoader().load("./Textures/skybox.jpeg");
@@ -368,7 +369,11 @@ function render() {
         renderer.render(scene, camera) // Render scene
     }
     else {
-        som.pause();
+        if (isMuted) {
+            som.pause();
+        } else {
+            som.play();
+        }
     }
 }
 
@@ -476,7 +481,6 @@ function toggleSimulation() {
 }
 function unMuted() {
     isMuted = !isMuted;
-
     // Lógica para mutar/desmutar os sons
     if (isMuted) {
         som.pause();
@@ -611,13 +615,12 @@ function checkCollisions(bala) {
 }
 
 // ---------------------MOVIMENTO AVIAO-----------------------//
-function rotateAviao(distancia) {
-    let angle = distancia / 100;
-
-    if (distancia != 0) {
-
-        assetManager.aviao.lookAt(smallSquare.position);
-        assetManager.aviao.rotateZ(angle);
+function rotateAviao(distancia){
+    let angle = distancia/100;
+ 
+    if(assetManager.aviao.rotateZ !=0){
+        assetManager.aviao.lookAt(smallSquare.position); 
+        assetManager.aviao.rotateZ(angle);  
 
     }
     else {
@@ -685,15 +688,20 @@ function CriarTrincheiras(numTrincheiras) {
                 cuboCloneLateral.position.set(60, -10 + (o * 20), fim - (n * 20));
                 objects.push(cuboCloneLateral);
                 grupo.add(cuboCloneLateral);
+
             }
         }
         grupo.translateZ((limitador));
         limitador -= 100;
+
         for (let i = 0; i < 3; i++) {
             loadGLBFile('./objeto/', 'torreta', true, 13.0, loadingManager);
             if (assetManager.torreta) {
                 let position = getRandomPosition(grupo);
-                if (position.x < -42 || position.x > 42) {
+                if (position.x < -42) {
+                    position.y = 41.5;
+                }
+                if(position.x > 42){
                     position.y = 41.5;
                 }
                 assetManager.torreta.position.copy(position);
@@ -701,6 +709,49 @@ function CriarTrincheiras(numTrincheiras) {
                 grupo.attach(assetManager.torreta);
             }
         }
+
+        for (let i = 0; i < 10; i++) {
+            let position = getRandomPosition(grupo);
+
+            if (position.x < -45) {
+                position.x = -42;
+            }
+            if(position.x > 45){
+                position.x = 42
+            }
+
+            let miniBox1 = miniBox();
+            miniBox1.position.copy(position);
+            miniBox1.rotateY(Math.PI*position.x - 1);
+
+            if(i%2===0){
+                let position2 = new THREE.Vector3(THREE.MathUtils.randFloat(-70, -50), 42 , position.z );
+                let miniBox2 = miniBox();
+                miniBox2.position.copy(position2);
+                grupo.attach(miniBox2);
+
+                let position3 = new THREE.Vector3(45, THREE.MathUtils.randFloat(-42, 42), position.z);
+                let pipe = pipes();
+                pipe.rotateZ(1.6);
+                pipe.position.copy(position3);
+                grupo.attach(pipe);
+            }
+            else{
+                let position2 = new THREE.Vector3(THREE.MathUtils.randFloat(50, 70), 42 , position.z );
+                let miniBox2 = miniBox();
+                miniBox2.position.copy(position2);
+                grupo.attach(miniBox2);
+
+                let position3 = new THREE.Vector3(-45, THREE.MathUtils.randFloat(-41, 40), position.z);
+                let pipe = pipes();
+                pipe.rotateZ(-1.6);
+                pipe.position.copy(position3);
+                grupo.attach(pipe);
+            }
+           
+            grupo.attach(miniBox1);
+        }
+
         contadordeplanos.push(grupo);
         scene.add(grupo);
     }
@@ -809,6 +860,7 @@ function getRandomPosition(group) {
 
     return position;
 }
+
 function realocaPlanos() {
     if (vezesChamada == 0) {
         contadordeplanos[0].translateZ(somadorEmZ);
@@ -874,4 +926,41 @@ function checkCollisionsAviao(bala, paidaBala) {
             changeAviaoColor();
         }
     }
+}
+
+function miniBox(){
+    let cubo = new THREE.BoxGeometry(5, 5, 5);
+    let miniBox = new THREE.Mesh(cubo, cubeMaterials[6]);
+        
+    miniBox.receiveShadow = true; 
+    miniBox.castShadow = true;  
+    return miniBox;
+}
+
+function pipes() {
+  let pipeGeometry = new THREE.CylinderGeometry(2.5, 2.5, 10);
+  let capGeometry = new THREE.ConeGeometry(2.5, 3, 16, 18);
+
+  let textureLoader = new THREE.TextureLoader();
+  let envMapTexture = textureLoader.load('./Textures/aco.jpeg');
+  envMapTexture.mapping = THREE.EquirectangularReflectionMapping;
+
+  let pipeMaterial = new THREE.MeshPhongMaterial({
+    side: THREE.DoubleSide,
+    envMap: envMapTexture
+  });
+
+  let pipe = new THREE.Mesh(pipeGeometry, pipeMaterial);
+  let cap = new THREE.Mesh(capGeometry,pipeMaterial );
+  cap.position.set(0, 6.5, 0);
+  pipe.castShadow = true;
+  pipe.receiveShadow = true;
+
+  cap.castShadow = true;
+  cap.receiveShadow = true;
+
+  pipe.add(cap); 
+
+
+  return pipe;
 }
