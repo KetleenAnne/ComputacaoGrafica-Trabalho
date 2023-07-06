@@ -16,6 +16,7 @@ let isActive = true;
 let isCursorVisible = false;
 let isMuted = false;
 var lerpConfig;
+let contador = 0;
 var limitador = 0;
 var intervalo = 3000;
 let tirosTorreta = [];
@@ -24,12 +25,13 @@ const somadorEmZ = -500;
 let numTirosLevados = 0;
 let contadordeplanos = [];
 var vezesChamada = 0;
-const colors = [
-    new THREE.Color(1, 1, 1),          // Branco
-    new THREE.Color(1, 0.8, 0.8),      // Tom avermelhado mais claro
-    new THREE.Color(1, 0.6, 0.6),      // Tom avermelhado médio
-    new THREE.Color(1, 0.4, 0.4),      // Tom avermelhado mais escuro
-    new THREE.Color(1, 0, 0)           // Vermelho completo
+let colors = [
+    255,          // Branco
+    205,      // Tom avermelhado mais claro
+    155,      // Tom avermelhado médio
+    105,      // Tom avermelhado mais escuro
+    55,           // Vermelho completo
+    5,
 ];
 let tiros = [];
 let tirosHB = [];
@@ -304,7 +306,7 @@ audio.load('./sounds/ambiente.mp3', function (buffer) {
 
 //-- Create colisao sound ---------------------------------------------------       
 const colisaoAviaoSound = new THREE.Audio(listener);
-audioLoader.load('./sounds/colisaotorreta.mp3', function (buffer) {
+audioLoader.load('./sounds/colisaoaviao.mp3', function (buffer) {
     colisaoAviaoSound.setBuffer(buffer);
     colisaoAviaoSound.setLoop(false);
     colisaoAviaoSound.setVolume(0.1);
@@ -353,6 +355,11 @@ render();
 function render() {
     requestAnimationFrame(render);
     if (!isPaused) {
+        contador++;
+        if (contador > 200) {
+            contador = 0;
+            tiroTorretas();
+        }
         explosion.animate();
         assetManager.checkLoaded();
         updateAsset();
@@ -421,7 +428,7 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
         var obj = fixPosition(obj);
         obj.updateMatrixWorld(true);
         if (obj.name == 'aviao') {
-           // obj.rotateY(3.13);
+            // obj.rotateY(3.13);
             obj.position.copy(posicaoAviao);
             obj.layers.set(1);
             assetManager.hbAviao.setFromObject(obj);
@@ -481,9 +488,6 @@ function onKeyPress(event) {
     if (event.code === 'Escape') {
         toggleSimulation();
     }
-    if(event.code === "KeyS"){
-        trilhaSonora();
-    }
     if (event.code === 'Digit1') {
         velocidade = 1.5;
     }
@@ -535,7 +539,7 @@ function updateAsset() {
         if (assetManager.aviao.position.y > 10) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 1.5);
         }
-        if(assetManager.aviao.position.y < 10){
+        if (assetManager.aviao.position.y < 10) {
             cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha * 2);
         }
 
@@ -565,7 +569,7 @@ function updateAsset() {
 function UpdateProjetil() {
     if (tiros != null) {
         tiros.forEach((b, i) => {
-            b.translateZ(velocidade * 2);
+            b.translateZ(velocidade + 2);
             tirosHB[i].copy(b.geometry.boundingBox).applyMatrix4(b.matrixWorld);
             tirosHB[i].setFromObject(b);
             let distancia = b.position.distanceTo(b.userData.initialPosition);
@@ -607,32 +611,31 @@ function checkCollisions(bala) {
 }
 
 // ---------------------MOVIMENTO AVIAO-----------------------//
-function rotateAviao(distancia){
-    let angle = distancia/100;
- 
-    if(distancia != 0){
+function rotateAviao(distancia) {
+    let angle = distancia / 100;
 
-        assetManager.aviao.lookAt(smallSquare.position); 
-        assetManager.aviao.rotateZ(angle);  
+    if (distancia != 0) {
+
+        assetManager.aviao.lookAt(smallSquare.position);
+        assetManager.aviao.rotateZ(angle);
 
     }
-    else{
-        assetManager.aviao.rotateZ(-angle);  
+    else {
+        assetManager.aviao.rotateZ(-angle);
     }
 
 
 }
 
 function changeAviaoColor() {
-    if (assetManager.aviao && assetManager.aviao.material) {
-        assetManager.aviao.traverse(function (child) {
-            if (child.material)
-                if (numTirosLevados < 5) {
-                    numTirosLevados++;
-                }
-            child.material.color.set(colors[numTirosLevados]);
-        });
-    }
+    assetManager.aviao.traverse(function (child) {
+        if (child.material) {
+            if (numTirosLevados < 5) {
+                numTirosLevados++;
+            }
+            child.material.color.set("rgb(255,"+colors[numTirosLevados]+","+colors[numTirosLevados]+")");
+        }
+    });
 }
 
 function CriarTrincheiras(numTrincheiras) {
@@ -754,7 +757,7 @@ function onButtonPressed() {
     som.play();
     document.body.style.cursor = 'none';
     vira = 1;
-    velocidade = 1.0;
+    velocidade = 0.0;
 }
 function loadAudio(manager, audio) {
     // Create ambient sound
@@ -810,7 +813,7 @@ function realocaPlanos() {
     if (vezesChamada == 0) {
         contadordeplanos[0].translateZ(somadorEmZ);
         contadordeplanos[1].translateZ(somadorEmZ);
-        
+
     }
     else if (vezesChamada == 1) {
         contadordeplanos[2].translateZ(somadorEmZ);
@@ -822,21 +825,21 @@ function realocaPlanos() {
 }
 
 function tiroTorretas() {
-    for(let i =0; i < torretas.length; i++){
+    for (let i = 0; i < torretas.length; i++) {
         let tiro = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 4), new THREE.MeshPhongMaterial({ color: 'yellow' }));
         tiro.castShadow = true;
         tiro.receiveShadow = true;
         let pos = new THREE.Vector3();
-        t.getWorldPosition(pos);
+        torretas[i].getWorldPosition(pos);
         tiro.position.copy(pos);
         let posAviao = new THREE.Vector3();
         assetManager.aviao.getWorldPosition(pos);
+        tiro.lookAt(pos);
         tiro.getWorldDirection(posAviao);
-        tiro.lookAt(posAviao);
         scene.add(tiro);
-        tiros.push(tiro);
+        tirosTorreta.push(tiro);
         let tiroHB = new THREE.Box3().setFromObject(tiro);
-        tirosHB.push(tiroHB);
+        tirosTorretaHB.push(tiroHB);
         tiro.userData = {};
         tiro.userData.initialPosition = new THREE.Vector3().copy(tiro.position);
         tiroTorretaSound.play();
@@ -845,9 +848,7 @@ function tiroTorretas() {
 function UpdateProjetilTorreta() {
     if (tirosTorreta != null) {
         tirosTorreta.forEach((b, i) => {
-            let direcao = new THREE.Vector3();
-            assetManager.aviao.getWorldDirection(direcao);
-            b.position.lerp(direcao, velocidade * 2);
+            b.translateZ(velocidade + 2);
             tirosTorretaHB[i].copy(b.geometry.boundingBox).applyMatrix4(b.matrixWorld);
             tirosTorretaHB[i].setFromObject(b);
             let distancia = b.position.distanceTo(b.userData.initialPosition);
@@ -858,17 +859,17 @@ function UpdateProjetilTorreta() {
 
                 i--;
             }
-            checkCollisionsAviao(tirosTorretaHB[i]);
+            checkCollisionsAviao(tirosTorretaHB[i],tirosTorreta[i]);
         })
     }
 }
 
-function checkCollisionsAviao(bala) {
+function checkCollisionsAviao(bala, paidaBala) {
     if (bala != null && assetManager.aviao != null) {
         let collision;
-        let i;
         collision = assetManager.hbAviao.intersectsBox(bala);
         if (collision) {
+            scene.remove(paidaBala);
             colisaoAviaoSound.play();
             changeAviaoColor();
         }
