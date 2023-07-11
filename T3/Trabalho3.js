@@ -84,7 +84,7 @@ let hbtorretas = [];
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
 //camera
-let camPos = new THREE.Vector3(0.0, 30.0, 70.0);
+let camPos = new THREE.Vector3(0.0, 15.0, 90.0);
 let camUp = new THREE.Vector3(0.0, 0.0, 0.0);
 
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -270,16 +270,6 @@ let materialcubo;
 function onMouseMove(event) {
     mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
     mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mousePosition, camera);
-
-    intersects = raycaster.intersectObjects(objectsRaycaster);
-
-    if (intersects.length > 0) {
-        let point = intersects[0].point;
-        smallSquare.position.set(point.x, point.y, point.z);
-        lerpConfig.destination.set(point.x, point.y, point.z + 100);
-    }
 };
 //criando trincheira
 const objects = [];
@@ -364,6 +354,7 @@ function render() {
         explosion.animate();
         assetManager.checkLoaded();
         updateAsset();
+        movimentacaoAviao();
         UpdateProjetil();
         UpdateProjetilTorreta();
         renderer.render(scene, camera) // Render scene
@@ -381,7 +372,7 @@ function render() {
 //funçoes
 function CriarPlano(scene, tamanhoPlano) {
     const planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(tamanhoPlano - 12, tamanhoPlano + 8),
+        new THREE.PlaneGeometry(tamanhoPlano*10, tamanhoPlano*10),
         new THREE.MeshLambertMaterial({
             side: THREE.DoubleSide,
             visible: false
@@ -536,26 +527,17 @@ function createBBHelper(bb, color) {
 
 function updateAsset() {
     if (assetManager.allLoaded) {
-
-
-        let distancia = (assetManager.aviao.position.x - mousePosition.x);
-        rotateAviao(distancia);
-        if (assetManager.aviao.position.y > 10) {
-            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha / 1.5);
-        }
-        if (assetManager.aviao.position.y < 10) {
-            cameraHolder.position.lerp(lerpConfig.destination, lerpConfig.alpha * 2);
-        }
-
-        assetManager.aviao.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+        // let distancia = (assetManager.aviao.position.x - mousePosition.x);
+        // rotateAviao(distancia);
         assetManager.hbAviao.setFromObject(assetManager.aviao);
         plano.position.z -= velocidade;
-        //cameraHolder.position.z -= velocidade;
         targetLuz.position.z -= velocidade;
         dirLight.position.z -= velocidade;
+        cameraHolder.translateZ(-velocidade);
         //skybox.position.copy(assetManager.aviao.position).sub(skyboxSize.multiplyScalar(0.5))
         let pos = new THREE.Vector3();
         assetManager.aviao.getWorldPosition(pos);
+        //cameraHolder.position.lerp(pos, lerpConfig.alpha / 1.5);
         if (pos.z <= limitador / 2) {
             realocaPlanos();
             if (vezesChamada != 2) {
@@ -705,8 +687,7 @@ function CriarTrincheiras(numTrincheiras) {
                     position.y = 41.5;
                 }
                 assetManager.torreta.position.copy(position);
-                torretas.push(assetManager.torreta);
-                grupo.attach(assetManager.torreta);
+                grupo.add(assetManager.torreta);
             }
         }
 
@@ -728,28 +709,28 @@ function CriarTrincheiras(numTrincheiras) {
                 let position2 = new THREE.Vector3(THREE.MathUtils.randFloat(-70, -50), 42 , position.z );
                 let miniBox2 = miniBox();
                 miniBox2.position.copy(position2);
-                grupo.attach(miniBox2);
+                grupo.add(miniBox2);
 
                 let position3 = new THREE.Vector3(45, THREE.MathUtils.randFloat(-42, 42), position.z);
                 let pipe = pipes();
                 pipe.rotateZ(1.6);
                 pipe.position.copy(position3);
-                grupo.attach(pipe);
+                grupo.add(pipe);
             }
             else{
                 let position2 = new THREE.Vector3(THREE.MathUtils.randFloat(50, 70), 42 , position.z );
                 let miniBox2 = miniBox();
                 miniBox2.position.copy(position2);
-                grupo.attach(miniBox2);
+                grupo.add(miniBox2);
 
                 let position3 = new THREE.Vector3(-45, THREE.MathUtils.randFloat(-41, 40), position.z);
                 let pipe = pipes();
                 pipe.rotateZ(-1.6);
                 pipe.position.copy(position3);
-                grupo.attach(pipe);
+                grupo.add(pipe);
             }
            
-            grupo.attach(miniBox1);
+            grupo.add(miniBox1);
         }
 
         contadordeplanos.push(grupo);
@@ -808,7 +789,7 @@ function onButtonPressed() {
     som.play();
     document.body.style.cursor = 'none';
     vira = 1;
-    velocidade = 0.0;
+    velocidade = 1.0;
 }
 function loadAudio(manager, audio) {
     // Create ambient sound
@@ -963,4 +944,52 @@ function pipes() {
 
 
   return pipe;
+}
+
+function movimentacaoAviao() {
+    if(assetManager.aviao){
+        raycaster.setFromCamera(mousePosition, camera);
+        let point = new THREE.Vector3();
+        let novaPosicaoCamera = new THREE.Vector3();
+        intersects = raycaster.intersectObjects(objectsRaycaster);
+
+        if (intersects.length > 0) {
+            point = intersects[0].point;
+            smallSquare.position.copy(intersects[0].point);
+            lerpConfig.destination.set(point.x, point.y, point.z + 100);
+            let newPos = new THREE.Vector3();
+            newPos.x = smallSquare.position.x;
+            newPos.y = smallSquare.position.y;
+            newPos.z = smallSquare.position.z+100;
+            assetManager.aviao.position.lerp(newPos, 0.05)
+            
+        }
+        if (assetManager.aviao.position.y <10) {
+            assetManager.aviao.position.y =10;
+            smallSquare.position.y = 3;
+            novaPosicaoCamera.x = cameraHolder.position.x;
+            novaPosicaoCamera.y = 10;
+            novaPosicaoCamera.z = cameraHolder.position.z;
+            cameraHolder.position.lerp(novaPosicaoCamera, 0.03);
+        } 
+        if (assetManager.aviao.position.y > 60) {
+            assetManager.aviao.position.y = 60;
+            novaPosicaoCamera.x = cameraHolder.position.x;
+            novaPosicaoCamera.y = 50;
+            novaPosicaoCamera.z = cameraHolder.position.z;
+            cameraHolder.position.lerp(novaPosicaoCamera, 0.03);
+            smallSquare.position.y =60;
+        }
+        if (assetManager.aviao.position.x < -90 / 2) {
+            assetManager.aviao.position.x = -90 / 2;
+            smallSquare.position.x = -90/2;
+        }
+        if (assetManager.aviao.position.x > 90 / 2) {
+            assetManager.aviao.position.x = 45;
+            smallSquare.position.x = 45;
+        }
+        assetManager.aviao.lookAt(smallSquare.position.x, smallSquare.position.y, point.z);
+        var limiteDeRotZ = 0.6; // limita a rotação em Z do avião
+        assetManager.aviao.rotateZ(Math.atan(-(assetManager.aviao.position.x - point.x)) * limiteDeRotZ); // controla rotação em z baseado no angulo entre a posição em x do mouse com a do avião
+    }
 }
