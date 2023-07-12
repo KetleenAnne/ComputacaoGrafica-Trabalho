@@ -148,15 +148,17 @@ let dirLight = new THREE.DirectionalLight(lightColor);
 
 const loadingManager = new THREE.LoadingManager(() => {
     let loadingScreen = document.getElementById('loading-screen');
-    loadingScreen.transition = 0;
-    loadingScreen.style.setProperty('--speed1', '0');
-    loadingScreen.style.setProperty('--speed2', '0');
-    loadingScreen.style.setProperty('--speed3', '0');
+    if(loadingScreen != null){
+        loadingScreen.transition = 0;
+        loadingScreen.style.setProperty('--speed1', '0');
+        loadingScreen.style.setProperty('--speed2', '0');
+        loadingScreen.style.setProperty('--speed3', '0');
 
-    let button = document.getElementById("myBtn")
-    button.style.backgroundColor = 'Red';
-    button.innerHTML = 'Start';
-    button.addEventListener("click", onButtonPressed);
+        let button = document.getElementById("myBtn")
+        button.style.backgroundColor = 'Red';
+        button.innerHTML = 'Start';
+        button.addEventListener("click", onButtonPressed);
+    }
 });
 
 loadAudio(loadingManager, './sounds/game-start.mp3');
@@ -362,6 +364,8 @@ function render() {
     else {
         if (isMuted) {
             som.pause();
+            colisaoAviaoSound.pause();
+            tiroTorretaSound.pause();
         } else {
             som.play();
         }
@@ -438,6 +442,8 @@ function loadGLBFile(modelPath, modelName, visibility, desiredScale, manager) {
             torretas.push(obj);
             hbtorretas.push(new THREE.Box3().setFromObject(obj));
             obj.receiveShadow = true;
+            var torreta = createBBHelper(assetManager.hbTorreta, 'white')
+
         }
 
         obj.castShadow = true;
@@ -584,10 +590,9 @@ function checkCollisions(bala) {
                             explosion.build();
                             if (torretas[i]) {
                                 animateExplosion(torretas[i]);
+                                scene.remove(torretas[i]); // Remova o objeto da cena
                             }
-                            scene.remove(torretas[i]); // Remova o objeto da cena
-                            torretas.splice(i, 1);
-                            hbtorretas.splice(i, 1);
+                            scene.remove(bala);
                         }
                     });
                 }
@@ -773,12 +778,14 @@ function animateExplosion(object) {
 }
 function onButtonPressed() {
     const loadingScreen = document.getElementById('loading-screen');
-    loadingScreen.transition = 0;
-    loadingScreen.classList.add('fade-out');
-    loadingScreen.addEventListener('transitionend', (e) => {
-        const element = e.target;
-        element.remove();
-    });
+    if (loadingScreen != null){
+        loadingScreen.transition = 0;
+        loadingScreen.classList.add('fade-out');
+        loadingScreen.addEventListener('transitionend', (e) => {
+            const element = e.target;
+            element.remove();
+        });
+    }
     // Config and play the loaded audio
     let sound = new THREE.Audio(new THREE.AudioListener());
     audioLoader.load("./sounds/game-start.mp3", function (buffer) {
@@ -846,14 +853,53 @@ function realocaPlanos() {
     if (vezesChamada == 0) {
         contadordeplanos[0].translateZ(somadorEmZ);
         contadordeplanos[1].translateZ(somadorEmZ);
-
+        let posicaoPlano = new THREE.Vector3();
+        contadordeplanos[1].getWorldPosition(posicaoPlano);
+        for (let i = 0; i < 2; i++){
+            loadGLBFile('./objeto/', 'torreta', true, 13.0, loadingManager);
+            if(assetManager.torreta)
+            {
+                assetManager.torreta.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5,THREE.MathUtils.randFloat((posicaoPlano.z)-45, (posicaoPlano.z+45)));
+                assetManager.hbTorreta = new THREE.Box3().setFromObject(assetManager.torreta,true);
+                torretas.push(assetManager.torreta);
+                hbtorretas.push(assetManager.hbTorreta);
+                createBBHelper(assetManager.hbTorreta,'green');
+            }
+        }
     }
     else if (vezesChamada == 1) {
         contadordeplanos[2].translateZ(somadorEmZ);
         contadordeplanos[3].translateZ(somadorEmZ);
+        let posicaoPlano = new THREE.Vector3();
+        contadordeplanos[3].getWorldPosition(posicaoPlano);
+        for (let i = 0; i < 2; i++){
+            loadGLBFile('./objeto/', 'torreta', true, 13.0, loadingManager);
+            if(assetManager.torreta)
+            {
+                assetManager.torreta.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5,THREE.MathUtils.randFloat((posicaoPlano.z)-45, (posicaoPlano.z+45)));
+                assetManager.hbTorreta = new THREE.Box3().setFromObject(assetManager.torreta,true);
+                torretas.push(assetManager.torreta);
+                hbtorretas.push(assetManager.hbTorreta);
+                createBBHelper(assetManager.hbTorreta,'red');
+            }
+        }
+        
     }
     else if (vezesChamada == 2) {
         contadordeplanos[4].translateZ(somadorEmZ);
+        let posicaoPlano = new THREE.Vector3();
+        contadordeplanos[4].getWorldPosition(posicaoPlano);
+        for (let i = 0; i < 2; i++){
+            loadGLBFile('./objeto/', 'torreta', true, 13.0, loadingManager);
+            if(assetManager.torreta)
+            {
+                assetManager.torreta.position.set(THREE.MathUtils.randFloat(-45, 45), 1.5,THREE.MathUtils.randFloat((posicaoPlano.z)-45, (posicaoPlano.z+45)));
+                assetManager.hbTorreta = new THREE.Box3().setFromObject(assetManager.torreta,true);
+                torretas.push(assetManager.torreta);
+                hbtorretas.push(assetManager.hbTorreta);
+                createBBHelper(assetManager.hbTorreta,'blue');
+            }
+        }
     }
 }
 
@@ -885,26 +931,28 @@ function UpdateProjetilTorreta() {
             tirosTorretaHB[i].copy(b.geometry.boundingBox).applyMatrix4(b.matrixWorld);
             tirosTorretaHB[i].setFromObject(b);
             let distancia = b.position.distanceTo(b.userData.initialPosition);
-            if (b.position.y < 0 || distancia > 500 || b.position.x < -45 || b.position.x > 45 || b.position.y > 100) {
+            if (b.position.y < 0 || distancia > 500 || b.position.x < -45 || b.position.x > 45 || b.position.y > 100 || checkCollisionsAviao(tirosTorretaHB[i])) {
                 scene.remove(b);
                 tirosTorreta.splice(i, 1);
                 tirosTorretaHB.splice(i, 1);
-
                 i--;
             }
-            checkCollisionsAviao(tirosTorretaHB[i],tirosTorreta[i]);
+            
         })
     }
 }
 
-function checkCollisionsAviao(bala, paidaBala) {
+function checkCollisionsAviao(bala) {
     if (bala != null && assetManager.aviao != null) {
         let collision;
         collision = assetManager.hbAviao.intersectsBox(bala);
         if (collision) {
-            scene.remove(paidaBala);
             colisaoAviaoSound.play();
             changeAviaoColor();
+            return true;
+        }
+        else{
+            return false;
         }
     }
 }
